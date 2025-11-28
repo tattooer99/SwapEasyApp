@@ -1,0 +1,217 @@
+.exchange-history-page {
+  padding: 16px;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page {
+    padding: 12px;
+  }
+}
+
+.exchange-history-page__loading,
+.exchange-history-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--tg-theme-hint-color);
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__loading,
+  .exchange-history-page__empty {
+    font-size: 14px;
+    padding: 16px;
+  }
+}
+
+.exchange-history-page__hint {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__hint {
+    font-size: 13px;
+  }
+}
+
+.exchange-history-page__button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+
+.exchange-history-page__title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__title {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+}
+
+.exchange-history-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__list {
+    gap: 12px;
+  }
+}
+
+.exchange-history-page__exchange {
+  background: var(--tg-theme-secondary-bg-color);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange {
+    border-radius: 10px;
+    padding: 12px;
+    gap: 12px;
+  }
+}
+
+.exchange-history-page__exchange-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.exchange-history-page__exchange-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.exchange-history-page__exchange-user {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-user {
+    font-size: 15px;
+  }
+}
+
+.exchange-history-page__exchange-date {
+  font-size: 13px;
+  color: var(--tg-theme-hint-color);
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-date {
+    font-size: 12px;
+  }
+}
+
+.exchange-history-page__exchange-badge {
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-badge {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+.exchange-history-page__exchange-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-content {
+    gap: 10px;
+  }
+}
+
+.exchange-history-page__exchange-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exchange-history-page__exchange-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-label {
+    font-size: 13px;
+  }
+}
+
+.exchange-history-page__exchange-arrow {
+  font-size: 24px;
+  text-align: center;
+  color: var(--tg-theme-button-color);
+  padding: 8px 0;
+}
+
+@media (max-width: 480px) {
+  .exchange-history-page__exchange-arrow {
+    font-size: 20px;
+    padding: 6px 0;
+  }
+}
+

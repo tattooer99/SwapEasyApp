@@ -1,0 +1,211 @@
+.edit-case-page {
+  padding: 16px;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page {
+    padding: 12px;
+  }
+}
+
+.edit-case-page__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--tg-theme-hint-color);
+  font-size: 16px;
+}
+
+.edit-case-page__header {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__header {
+    margin-bottom: 16px;
+  }
+}
+
+.edit-case-page__header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__header h2 {
+    font-size: 20px;
+  }
+}
+
+.edit-case-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__form {
+    gap: 16px;
+  }
+}
+
+.edit-case-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-case-page__field label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+}
+
+.edit-case-page__input,
+.edit-case-page__textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--tg-theme-hint-color);
+  border-radius: 8px;
+  background: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+  font-size: 16px;
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__input,
+  .edit-case-page__textarea {
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 16px; /* Важно для iOS */
+  }
+}
+
+.edit-case-page__textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.edit-case-page__options {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__options {
+    gap: 8px;
+  }
+}
+
+.edit-case-page__option {
+  padding: 14px;
+  background: var(--tg-theme-secondary-bg-color);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: var(--tg-theme-text-color);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.15s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__option {
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 10px;
+    gap: 10px;
+  }
+}
+
+.edit-case-page__option:active {
+  transform: scale(0.98);
+}
+
+.edit-case-page__option.active {
+  border-color: var(--tg-theme-button-color);
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+}
+
+.edit-case-page__option-emoji {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__option-emoji {
+    font-size: 20px;
+  }
+}
+
+.edit-case-page__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__buttons {
+    gap: 8px;
+  }
+}
+
+.edit-case-page__button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 480px) {
+  .edit-case-page__button {
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+}
+
+.edit-case-page__button:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.edit-case-page__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.edit-case-page__button--save {
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+}
+
+.edit-case-page__button--cancel {
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--tg-theme-hint-color);
+}
+

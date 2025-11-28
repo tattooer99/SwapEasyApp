@@ -1,0 +1,228 @@
+.user-cases-page {
+  padding: 16px;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page {
+    padding: 12px;
+  }
+}
+
+.user-cases-page__loading,
+.user-cases-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--tg-theme-hint-color);
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__loading,
+  .user-cases-page__empty {
+    font-size: 14px;
+    padding: 16px;
+  }
+}
+
+.user-cases-page__header {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__header {
+    margin-bottom: 16px;
+  }
+}
+
+.user-cases-page__header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__header h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+}
+
+.user-cases-page__user-info {
+  background: var(--tg-theme-secondary-bg-color);
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__user-info {
+    padding: 10px;
+    border-radius: 6px;
+  }
+}
+
+.user-cases-page__user-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__user-name {
+    font-size: 15px;
+  }
+}
+
+.user-cases-page__user-region {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color);
+  margin: 0 0 12px 0;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__user-region {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+}
+
+.user-cases-page__user-rating {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--tg-theme-bg-color);
+  border-radius: 6px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__user-rating {
+    margin-top: 6px;
+    padding: 6px;
+    border-radius: 5px;
+  }
+}
+
+.user-cases-page__rating-stars {
+  font-size: 16px;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__rating-stars {
+    font-size: 14px;
+  }
+}
+
+.user-cases-page__rating-text {
+  font-size: 13px;
+  color: var(--tg-theme-hint-color);
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__rating-text {
+    font-size: 12px;
+  }
+}
+
+.user-cases-page__chat-button {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__chat-button {
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+}
+
+.user-cases-page__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--tg-theme-secondary-bg-color);
+  border: none;
+  color: var(--tg-theme-text-color);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__close {
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+}
+
+.user-cases-page__cases {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-cases-page__case-selectable {
+  cursor: pointer;
+  transition: transform 0.15s;
+  touch-action: manipulation;
+}
+
+.user-cases-page__case-selectable:active {
+  transform: scale(0.98);
+}
+
+.user-cases-page__add-case-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  width: 100%;
+  max-width: 300px;
+}
+
+@media (max-width: 480px) {
+  .user-cases-page__add-case-button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+

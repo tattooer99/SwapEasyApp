@@ -1,0 +1,129 @@
+.view-cases-page {
+  padding: 16px;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page {
+    padding: 12px;
+  }
+}
+
+.view-cases-page__header {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__header {
+    margin-bottom: 20px;
+  }
+}
+
+.view-cases-page__header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__header h2 {
+    font-size: 20px;
+  }
+}
+
+.view-cases-page__options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__options {
+    gap: 12px;
+  }
+}
+
+.view-cases-page__option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: var(--tg-theme-secondary-bg-color);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+  touch-action: manipulation;
+  text-align: left;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__option {
+    padding: 16px;
+    gap: 12px;
+    border-radius: 10px;
+  }
+}
+
+.view-cases-page__option:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.view-cases-page__option-icon {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__option-icon {
+    font-size: 36px;
+  }
+}
+
+.view-cases-page__option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.view-cases-page__option-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__option-content h3 {
+    font-size: 16px;
+  }
+}
+
+.view-cases-page__option-content p {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color);
+  margin: 0;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__option-content p {
+    font-size: 13px;
+  }
+}
+
+.view-cases-page__option-arrow {
+  font-size: 24px;
+  color: var(--tg-theme-hint-color);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__option-arrow {
+    font-size: 20px;
+  }
+}
+

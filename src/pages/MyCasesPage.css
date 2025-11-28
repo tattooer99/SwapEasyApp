@@ -1,0 +1,275 @@
+.my-cases-page {
+  padding: 16px;
+  min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page {
+    padding: 12px;
+  }
+}
+
+.my-cases-page__loading,
+.my-cases-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--tg-theme-hint-color);
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__loading,
+  .my-cases-page__empty {
+    font-size: 14px;
+    padding: 16px;
+  }
+}
+
+.my-cases-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__header {
+    margin-bottom: 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.my-cases-page__header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__header h2 {
+    font-size: 20px;
+  }
+}
+
+.my-cases-page__add-button {
+  padding: 10px 16px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__add-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+  }
+}
+
+.my-cases-page__empty-button {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__empty-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+.my-cases-page__cases {
+  display: flex;
+  flex-direction: column;
+}
+
+.my-cases-page__case-wrapper {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__case-wrapper {
+    margin-bottom: 12px;
+  }
+}
+
+.my-cases-page__case-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__case-actions {
+    gap: 6px;
+    margin-top: 6px;
+  }
+}
+
+.my-cases-page__action-button {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__action-button {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+
+.my-cases-page__action-button:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.my-cases-page__action-button--edit {
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+}
+
+.my-cases-page__action-button--delete {
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--tg-theme-hint-color);
+}
+
+.my-cases-page__modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.my-cases-page__modal-content {
+  background: var(--tg-theme-bg-color);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__modal-content {
+    padding: 16px;
+    border-radius: 10px;
+  }
+}
+
+.my-cases-page__modal-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--tg-theme-text-color);
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__modal-content h3 {
+    font-size: 18px;
+  }
+}
+
+.my-cases-page__modal-content p {
+  font-size: 14px;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.my-cases-page__modal-warning {
+  color: var(--tg-theme-hint-color) !important;
+  font-size: 13px !important;
+  font-style: italic;
+}
+
+.my-cases-page__modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__modal-actions {
+    gap: 8px;
+    margin-top: 16px;
+  }
+}
+
+.my-cases-page__modal-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+  .my-cases-page__modal-button {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+
+.my-cases-page__modal-button:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.my-cases-page__modal-button--confirm {
+  background: #dc3545;
+  color: white;
+}
+
+.my-cases-page__modal-button--cancel {
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--tg-theme-hint-color);
+}
+
