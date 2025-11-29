@@ -225,9 +225,9 @@ export function useSupabase() {
     item_type: string
     description: string
     price_category: string
-    photo1?: string
-    photo2?: string
-    photo3?: string
+    photo1?: string | null
+    photo2?: string | null
+    photo3?: string | null
   }): Promise<Case> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     
@@ -260,16 +260,36 @@ export function useSupabase() {
       throw new Error('Supabase не настроен. Налаштуйте VITE_SUPABASE_URL та VITE_SUPABASE_ANON_KEY')
     }
 
+    // Подготавливаем данные для вставки - явно указываем null для отсутствующих фото
+    const insertData = {
+      user_id: currentUser.id,
+      title: caseData.title,
+      item_type: caseData.item_type,
+      description: caseData.description,
+      price_category: caseData.price_category,
+      photo1: caseData.photo1 || null,
+      photo2: caseData.photo2 || null,
+      photo3: caseData.photo3 || null,
+    }
+    
+    console.log('createCase: inserting case with photos:', {
+      photo1: insertData.photo1 ? 'exists' : 'null',
+      photo2: insertData.photo2 ? 'exists' : 'null',
+      photo3: insertData.photo3 ? 'exists' : 'null'
+    })
+
     const { data, error } = await supabase
       .from('my_items')
-      .insert({
-        user_id: currentUser.id,
-        ...caseData,
-      })
+      .insert(insertData)
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('createCase: error inserting case:', error)
+      throw error
+    }
+    
+    console.log('createCase: case created successfully:', data)
     return data as Case
   }
 
@@ -717,22 +737,49 @@ export function useSupabase() {
       throw new Error('Supabase не настроен')
     }
 
+    // Подготавливаем данные для обновления - явно указываем null для отсутствующих фото
+    const updateData: {
+      title?: string
+      item_type?: string
+      description?: string
+      price_category?: string
+      photo1?: string | null
+      photo2?: string | null
+      photo3?: string | null
+    } = {}
+    
+    if (caseData.title !== undefined) updateData.title = caseData.title
+    if (caseData.item_type !== undefined) updateData.item_type = caseData.item_type
+    if (caseData.description !== undefined) updateData.description = caseData.description
+    if (caseData.price_category !== undefined) updateData.price_category = caseData.price_category
+    if (caseData.photo1 !== undefined) updateData.photo1 = caseData.photo1 || null
+    if (caseData.photo2 !== undefined) updateData.photo2 = caseData.photo2 || null
+    if (caseData.photo3 !== undefined) updateData.photo3 = caseData.photo3 || null
+    
+    console.log('updateCase: updating case with photos:', {
+      photo1: updateData.photo1 ? 'exists' : 'null',
+      photo2: updateData.photo2 ? 'exists' : 'null',
+      photo3: updateData.photo3 ? 'exists' : 'null'
+    })
+
     const { data, error } = await supabase
       .from('my_items')
-      .update(caseData)
+      .update(updateData)
       .eq('id', caseId)
       .eq('user_id', currentUser.id)
       .select()
       .single()
 
     if (error) {
-      console.error('Error updating case:', error)
+      console.error('updateCase: error updating case:', error)
       throw new Error(`Помилка оновлення кейсу: ${error.message || 'Невідома помилка'}`)
     }
 
     if (!data) {
       throw new Error('Кейс не знайдено або немає доступу')
     }
+    
+    console.log('updateCase: case updated successfully:', data)
 
     return data as Case
   }
