@@ -344,10 +344,10 @@ export function useSupabase() {
       }
     }
 
-    // Получаем кейсы по найденному user_id
+    // Получаем кейсы по найденному user_id - явно указываем все поля фото
     const { data, error } = await supabase
       .from('my_items')
-      .select('*')
+      .select('id, user_id, title, item_type, description, price_category, photo1, photo2, photo3, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
@@ -356,7 +356,18 @@ export function useSupabase() {
       return []
     }
 
-    console.log('getMyCases: found cases:', data?.length || 0, 'cases:', data)
+    console.log('getMyCases: found cases:', data?.length || 0)
+    // Логируем детали каждого кейса
+    if (data && data.length > 0) {
+      data.forEach((item: any) => {
+        const photoCount = [item.photo1, item.photo2, item.photo3].filter(p => p != null && p !== '').length
+        console.log(`Case ${item.id} (${item.title}): ${photoCount} photos`, {
+          photo1: item.photo1 ? 'exists (' + item.photo1.substring(0, 50) + '...)' : 'null',
+          photo2: item.photo2 ? 'exists (' + item.photo2.substring(0, 50) + '...)' : 'null',
+          photo3: item.photo3 ? 'exists (' + item.photo3.substring(0, 50) + '...)' : 'null'
+        })
+      })
+    }
     return (data || []) as Case[]
   }
 
