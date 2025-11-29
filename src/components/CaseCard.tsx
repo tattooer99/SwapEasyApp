@@ -18,7 +18,16 @@ export default function CaseCard({
   showActions = true,
 }: CaseCardProps) {
   const itemTypeEmoji = ITEM_TYPES.find(t => t.value === caseItem.item_type)?.emoji || '📦'
-  const photos = [caseItem.photo1, caseItem.photo2, caseItem.photo3].filter(Boolean) as string[]
+  
+  // Собираем все фото, включая null/undefined значения, затем фильтруем
+  const allPhotos = [caseItem.photo1, caseItem.photo2, caseItem.photo3]
+  const photos = allPhotos.filter((photo): photo is string => photo != null && photo !== '')
+  
+  // Логируем для отладки
+  if (photos.length > 1) {
+    console.log('CaseCard: multiple photos found for case', caseItem.id, 'photos:', photos.length, 'photo1:', caseItem.photo1 ? 'exists' : 'null', 'photo2:', caseItem.photo2 ? 'exists' : 'null', 'photo3:', caseItem.photo3 ? 'exists' : 'null')
+  }
+  
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
 
   const handlePrevPhoto = (e: React.MouseEvent) => {
