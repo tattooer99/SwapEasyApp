@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Case, ITEM_TYPES } from '../types'
 import './CaseCard.css'
 
@@ -17,13 +18,47 @@ export default function CaseCard({
   showActions = true,
 }: CaseCardProps) {
   const itemTypeEmoji = ITEM_TYPES.find(t => t.value === caseItem.item_type)?.emoji || '📦'
-  const mainPhoto = caseItem.photo1 || caseItem.photo2 || caseItem.photo3
+  const photos = [caseItem.photo1, caseItem.photo2, caseItem.photo3].filter(Boolean) as string[]
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+
+  const handlePrevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrentPhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1))
+  }
+
+  const handleNextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setCurrentPhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0))
+  }
 
   return (
     <div className="case-card">
-      {mainPhoto && (
-        <div className="case-card__image">
-          <img src={mainPhoto} alt={caseItem.title} />
+      {photos.length > 0 && (
+        <div className="case-card__image-container">
+          <div className="case-card__image">
+            <img src={photos[currentPhotoIndex]} alt={caseItem.title} />
+          </div>
+          {photos.length > 1 && (
+            <>
+              <button
+                className="case-card__photo-nav case-card__photo-nav--prev"
+                onClick={handlePrevPhoto}
+                aria-label="Попереднє фото"
+              >
+                ‹
+              </button>
+              <button
+                className="case-card__photo-nav case-card__photo-nav--next"
+                onClick={handleNextPhoto}
+                aria-label="Наступне фото"
+              >
+                ›
+              </button>
+              <div className="case-card__photo-indicator">
+                {currentPhotoIndex + 1} / {photos.length}
+              </div>
+            </>
+          )}
         </div>
       )}
       <div className="case-card__content">
