@@ -104,16 +104,20 @@ export default function ChatPage() {
     setSending(true)
 
     try {
+      console.log('handleSendMessage: attempting to send message', { userId, messageText, currentUser: currentUser?.id })
       const sentMessage = await sendMessage(Number(userId), messageText)
+      console.log('handleSendMessage: message sent successfully', sentMessage)
       setMessages((prev) => [...prev, sentMessage])
       
       if (webApp?.HapticFeedback) {
         webApp.HapticFeedback.notificationOccurred('success')
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      console.error('handleSendMessage: error sending message:', error)
+      console.error('handleSendMessage: error details:', JSON.stringify(error, null, 2))
       const errorMessage = error instanceof Error ? error.message : String(error)
       setNewMessage(messageText) // Восстанавливаем текст сообщения
+      
       if (webApp) {
         webApp.showAlert('Помилка при відправці повідомлення: ' + errorMessage)
       } else {
