@@ -10,7 +10,7 @@ import './SearchPage.css'
 export default function SearchPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
-  const { currentUser, searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
+  const { searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
   const [cases, setCases] = useState<Case[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
