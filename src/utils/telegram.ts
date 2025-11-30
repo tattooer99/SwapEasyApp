@@ -1,4 +1,4 @@
-import { TelegramWebApp } from '../types/telegram'
+import type { TelegramWebApp } from '../types/telegram'
 
 export function safeBackButtonShow(webApp: TelegramWebApp, onClick: () => void) {
   if (webApp?.BackButton && webApp.BackButton.isVisible !== undefined) {
@@ -18,7 +18,7 @@ export function safeBackButtonHide(webApp: TelegramWebApp) {
  * Безопасный показ алерта в Telegram WebApp
  * Проверяет, не открыт ли уже popup, и обрабатывает ошибки
  */
-export function safeShowAlert(webApp: TelegramWebApp | null, message: string) {
+export function safeShowAlert(webApp: TelegramWebApp | null, message: string): void {
   if (!webApp) {
     // Fallback для разработки
     alert(message)
