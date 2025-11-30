@@ -37,14 +37,18 @@ export default function SearchPage() {
   const loadCases = async () => {
     try {
       setLoading(true)
+      console.log('SearchPage: starting to load cases...')
       const data = await searchCases()
+      console.log('SearchPage: received cases:', data.length, data)
       setCases(data)
       setCurrentIndex(0)
-      console.log('SearchPage: loaded cases:', data.length)
+      if (data.length === 0) {
+        console.warn('SearchPage: no cases found!')
+      }
     } catch (error) {
       console.error('Error loading cases:', error)
       if (webApp) {
-        webApp.showAlert('Помилка при завантаженні кейсів')
+        webApp.showAlert('Помилка при завантаженні кейсів: ' + (error as Error).message)
       }
     } finally {
       setLoading(false)
