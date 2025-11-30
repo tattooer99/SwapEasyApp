@@ -3,32 +3,28 @@ import { useNavigate } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
 import CaseCard from '../components/CaseCard'
-import { ITEM_TYPES, REGIONS, Case } from '../types'
+import { Case } from '../types'
+import { safeBackButtonShow, safeBackButtonHide } from '../utils/telegram'
 import './SearchPage.css'
 
 export default function SearchPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
-  const { searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
+  const { currentUser, searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
   const [cases, setCases] = useState<Case[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<{
-    item_type?: string
-    region?: string
-  }>({})
-  const [showFilters, setShowFilters] = useState(false)
   const [selectedCaseForExchange, setSelectedCaseForExchange] = useState<Case | null>(null)
   const [myCases, setMyCases] = useState<Case[]>([])
 
   useEffect(() => {
-    if (webApp?.BackButton) {
-      webApp.BackButton.show()
-      webApp.BackButton.onClick(() => navigate('/'))
+    if (webApp) {
+      safeBackButtonShow(webApp, () => navigate('/'))
     }
 
     return () => {
-      if (webApp?.BackButton) {
-        webApp.BackButton.hide()
+      if (webApp) {
+        safeBackButtonHide(webApp)
       }
     }
   }, [webApp, navigate])
@@ -36,13 +32,15 @@ export default function SearchPage() {
   useEffect(() => {
     loadCases()
     loadMyCases()
-  }, [filters])
+  }, [])
 
   const loadCases = async () => {
     try {
       setLoading(true)
-      const data = await searchCases(filters)
+      const data = await searchCases()
       setCases(data)
+      setCurrentIndex(0)
+      console.log('SearchPage: loaded cases:', data.length)
     } catch (error) {
       console.error('Error loading cases:', error)
       if (webApp) {
@@ -62,15 +60,20 @@ export default function SearchPage() {
     }
   }
 
-  const handleLike = async (caseItem: Case) => {
+  const handleLike = async () => {
+    const currentCase = cases[currentIndex]
+    if (!currentCase) return
+
     try {
-      await likeCase(caseItem.id, caseItem)
+      await likeCase(currentCase.id, currentCase)
       if (webApp?.HapticFeedback) {
         webApp.HapticFeedback.notificationOccurred('success')
       }
       if (webApp) {
         webApp.showAlert('Додано до вподобань!')
       }
+      // Переходим к следующему кейсу
+      goToNext()
     } catch (error) {
       console.error('Error liking case:', error)
       if (webApp) {
@@ -79,7 +82,26 @@ export default function SearchPage() {
     }
   }
 
-  const handleExchange = (caseItem: Case) => {
+  const handleSkip = () => {
+    goToNext()
+  }
+
+  const goToNext = () => {
+    if (currentIndex < cases.length - 1) {
+      setCurrentIndex(currentIndex + 1)
+    } else {
+      // Все кейсы просмотрены
+      if (webApp) {
+        webApp.showAlert('Більше кейсів немає. Спробуйте пізніше або додайте інтереси для кращого пошуку.')
+      }
+      navigate('/')
+    }
+  }
+
+  const handleExchange = () => {
+    const currentCase = cases[currentIndex]
+    if (!currentCase) return
+
     if (myCases.length === 0) {
       if (webApp) {
         webApp.showAlert('Спочатку додайте хоча б один кейс')
@@ -87,7 +109,7 @@ export default function SearchPage() {
       navigate('/add-case')
       return
     }
-    setSelectedCaseForExchange(caseItem)
+    setSelectedCaseForExchange(currentCase)
   }
 
   const handleSelectMyCaseForExchange = async (myCase: Case) => {
@@ -109,14 +131,24 @@ export default function SearchPage() {
         webApp.HapticFeedback?.notificationOccurred('success')
         webApp.showAlert('Пропозицію обміну відправлено!')
       }
-      // Reload cases to update UI
-      await loadCases()
+      // Переходим к следующему кейсу
+      goToNext()
     } catch (error) {
       console.error('Error creating exchange offer:', error)
       if (webApp) {
         webApp.showAlert('Помилка при створенні пропозиції')
       }
     }
+  }
+
+  const handleViewUserCases = () => {
+    const currentCase = cases[currentIndex]
+    if (!currentCase?.owner?.id) return
+    navigate(`/user-cases/${currentCase.owner.id}`)
+  }
+
+  const handleStopSearch = () => {
+    navigate('/')
   }
 
   if (loading) {
@@ -172,76 +204,74 @@ export default function SearchPage() {
     )
   }
 
+  const currentCase = cases[currentIndex]
+
+  if (!currentCase) {
+    return (
+      <div className="search-page">
+        <div className="search-page__empty">
+          <p>Кейси не знайдено.</p>
+          <p>Додайте інтереси для кращого пошуку або спробуйте пізніше.</p>
+          <button 
+            className="search-page__button"
+            onClick={() => navigate('/')}
+          >
+            На головну
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="search-page">
       <div className="search-page__header">
         <h2>Пошук кейсів</h2>
-        <button
-          className="search-page__filter-button"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          🔍 Фільтри
-        </button>
+        <div className="search-page__counter">
+          {currentIndex + 1} / {cases.length}
+        </div>
       </div>
 
-      {showFilters && (
-        <div className="search-page__filters">
-          <div className="search-page__filter-group">
-            <label>Категорія:</label>
-            <select
-              value={filters.item_type || ''}
-              onChange={(e) => setFilters({ ...filters, item_type: e.target.value || undefined })}
-              className="search-page__select"
-            >
-              <option value="">Всі</option>
-              {ITEM_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.emoji} {type.value}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="search-page__current-case">
+        <CaseCard
+          case={currentCase}
+          showActions={false}
+          onViewUser={handleViewUserCases}
+        />
+      </div>
 
-          <div className="search-page__filter-group">
-            <label>Регіон:</label>
-            <select
-              value={filters.region || ''}
-              onChange={(e) => setFilters({ ...filters, region: e.target.value || undefined })}
-              className="search-page__select"
-            >
-              <option value="">Всі</option>
-              {REGIONS.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      <div className="search-page__cases">
-        {cases.length === 0 ? (
-          <div className="search-page__empty">
-            Кейси не знайдено. Спробуйте змінити фільтри.
-          </div>
-        ) : (
-          cases.map((caseItem) => (
-            <CaseCard
-              key={caseItem.id}
-              case={caseItem}
-              onLike={() => handleLike(caseItem)}
-              onExchange={() => handleExchange(caseItem)}
-              onViewUser={() => {
-                if (caseItem.owner?.id) {
-                  navigate(`/user-cases/${caseItem.owner.id}`)
-                }
-              }}
-            />
-          ))
-        )}
+      <div className="search-page__actions">
+        <button
+          className="search-page__action-button search-page__action-button--like"
+          onClick={handleLike}
+        >
+          ❤️ Вподобати
+        </button>
+        <button
+          className="search-page__action-button search-page__action-button--skip"
+          onClick={handleSkip}
+        >
+          👎 Пропустити
+        </button>
+        <button
+          className="search-page__action-button search-page__action-button--exchange"
+          onClick={handleExchange}
+        >
+          🤝 Запропонувати обмін
+        </button>
+        <button
+          className="search-page__action-button search-page__action-button--view"
+          onClick={handleViewUserCases}
+        >
+          📋 Кейси користувача
+        </button>
+        <button
+          className="search-page__action-button search-page__action-button--stop"
+          onClick={handleStopSearch}
+        >
+          🛑 Завершити пошук
+        </button>
       </div>
     </div>
   )
 }
-
