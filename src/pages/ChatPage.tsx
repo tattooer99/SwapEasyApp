@@ -79,10 +79,15 @@ export default function ChatPage() {
   }
 
   const loadMessages = async () => {
-    if (!userId || !currentUser) return
+    if (!userId || !currentUser) {
+      console.log('loadMessages: missing userId or currentUser', { userId, currentUser: currentUser?.id })
+      return
+    }
 
     try {
+      console.log('loadMessages: loading messages for user', Number(userId))
       const data = await getMessages(Number(userId))
+      console.log('loadMessages: received', data.length, 'messages')
       setMessages(data)
     } catch (error) {
       console.error('Error loading messages:', error)
