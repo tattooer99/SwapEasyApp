@@ -427,10 +427,21 @@ export function useSupabase() {
       return []
     }
 
-    if (!currentUser) return []
+    if (!currentUser) {
+      console.warn('searchCases: currentUser is null')
+      return []
+    }
 
     // Получаем регион пользователя
     const userRegion = currentUser.region
+    
+    // Для отладки: проверяем все кейсы в базе
+    const { data: allItems } = await supabase
+      .from('my_items')
+      .select('id, user_id, title')
+      .limit(100)
+    console.log('searchCases: all items in DB:', allItems?.length, allItems)
+    console.log('searchCases: currentUser.id:', currentUser.id, 'currentUser.telegram_id:', currentUser.telegram_id)
 
     // Получаем список уже лайкнутых кейсов
     const { data: likedItems } = await supabase
@@ -443,7 +454,7 @@ export function useSupabase() {
 
     // Получаем интересы пользователя
     const interests = await getInterests()
-    console.log('searchCases: user interests:', interests)
+    console.log('searchCases: user_id:', currentUser.id, 'userRegion:', userRegion, 'interests:', interests.length)
 
     let items: any[] = []
 
@@ -473,10 +484,12 @@ export function useSupabase() {
         if (error) {
           console.error('Error searching by interest:', interest, error)
         } else if (data) {
+          console.log(`searchCases: found ${data.length} cases for interest ${interest.item_type} / ${interest.price_category}`)
           // Фильтруем лайкнутые кейсы вручную
           const filtered = likedItemIds.length > 0 
             ? data.filter(item => !likedItemIds.includes(item.id))
             : data
+          console.log(`searchCases: after filtering liked, ${filtered.length} cases remain`)
           allMatchingItems.push(...filtered)
         }
       }
@@ -487,7 +500,7 @@ export function useSupabase() {
       )
 
       items = uniqueItems
-      console.log('searchCases: found cases by interests:', items.length)
+      console.log('searchCases: found cases by interests (unique):', items.length)
 
       // Сортируем по региону: сначала кейсы из того же региона
       if (userRegion && items.length > 0) {
@@ -501,7 +514,7 @@ export function useSupabase() {
       }
     }
 
-    // 2. Если нет кейсов по интересам - ищем по региону
+    // 2. Если нет кейсов по интересам (или интересов нет вообще) - ищем по региону
     if (items.length === 0 && userRegion) {
       const { data: usersByRegion } = await supabase
         .from('users')
@@ -531,15 +544,19 @@ export function useSupabase() {
         if (error) {
           console.error('Error searching by region:', error)
         } else if (data) {
+          console.log('searchCases: found cases by region (before filtering):', data.length)
           // Фильтруем лайкнутые кейсы вручную
           items = data.filter(item => !likedItemIds.includes(item.id))
-          console.log('searchCases: found cases by region:', items.length)
+          console.log('searchCases: found cases by region (after filtering):', items.length)
         }
+      } else {
+        console.log('searchCases: no users found in region:', userRegion)
       }
     }
 
-    // 3. Если и их нет - показываем случайные кейсы
+    // 3. Если и их нет (или нет региона) - показываем случайные кейсы
     if (items.length === 0) {
+      console.log('searchCases: searching for random cases (no region or no cases by region)')
       const { data, error } = await supabase
         .from('my_items')
         .select(`
@@ -558,9 +575,10 @@ export function useSupabase() {
       if (error) {
         console.error('Error searching random cases:', error)
       } else if (data) {
+        console.log('searchCases: found random cases (before filtering):', data.length, 'likedItemIds:', likedItemIds.length)
         // Фильтруем лайкнутые кейсы вручную
         items = data.filter(item => !likedItemIds.includes(item.id))
-        console.log('searchCases: found random cases:', items.length)
+        console.log('searchCases: found random cases (after filtering):', items.length)
 
         // Сортируем по региону если есть
         if (userRegion && items.length > 0) {
@@ -593,15 +611,15 @@ export function useSupabase() {
       }
     }
 
-    // Фильтруем лайкнутые кейсы для результатов по интересам
-    if (likedItemIds.length > 0 && items.length > 0) {
-      items = items.filter(item => !likedItemIds.includes(item.id))
-    }
-
-    return items.map((item: any) => ({
+    console.log('searchCases: final items count:', items.length)
+    
+    const result = items.map((item: any) => ({
       ...item,
       owner: Array.isArray(item.users) ? item.users[0] : item.users,
     })) as Case[]
+    
+    console.log('searchCases: returning', result.length, 'cases')
+    return result
   }
 
   async function likeCase(itemId: number, caseData: Case): Promise<void> {
