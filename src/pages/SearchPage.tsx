@@ -10,12 +10,13 @@ import './SearchPage.css'
 export default function SearchPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
-  const { searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
+  const { currentUser, loading: userLoading, searchCases, likeCase, createExchangeOffer, getMyCases } = useSupabase()
   const [cases, setCases] = useState<Case[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [selectedCaseForExchange, setSelectedCaseForExchange] = useState<Case | null>(null)
   const [myCases, setMyCases] = useState<Case[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (webApp) {
@@ -30,25 +31,41 @@ export default function SearchPage() {
   }, [webApp, navigate])
 
   useEffect(() => {
-    loadCases()
-    loadMyCases()
-  }, [])
+    // Ждем загрузки пользователя перед загрузкой кейсов
+    if (!userLoading && currentUser) {
+      loadCases()
+      loadMyCases()
+    } else if (!userLoading && !currentUser) {
+      setError('Користувач не завантажений. Будь ласка, перезавантажте сторінку.')
+      setLoading(false)
+    }
+  }, [userLoading, currentUser])
 
   const loadCases = async () => {
+    if (!currentUser) {
+      setError('Користувач не ініціалізований')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      console.log('SearchPage: starting to load cases...')
+      setError(null)
+      console.log('SearchPage: starting to load cases, currentUser:', currentUser)
       const data = await searchCases()
       console.log('SearchPage: received cases:', data.length, data)
       setCases(data)
       setCurrentIndex(0)
       if (data.length === 0) {
         console.warn('SearchPage: no cases found!')
+        setError('Кейси не знайдено. Спробуйте пізніше або додайте інтереси для кращого пошуку.')
       }
     } catch (error) {
       console.error('Error loading cases:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Невідома помилка'
+      setError('Помилка при завантаженні кейсів: ' + errorMessage)
       if (webApp) {
-        webApp.showAlert('Помилка при завантаженні кейсів: ' + (error as Error).message)
+        webApp.showAlert('Помилка при завантаженні кейсів: ' + errorMessage)
       }
     } finally {
       setLoading(false)
@@ -155,10 +172,36 @@ export default function SearchPage() {
     navigate('/')
   }
 
-  if (loading) {
+  if (userLoading || loading) {
     return (
       <div className="search-page">
         <div className="search-page__loading">Завантаження...</div>
+      </div>
+    )
+  }
+
+  if (error && cases.length === 0) {
+    return (
+      <div className="search-page">
+        <div className="search-page__empty">
+          <p>{error}</p>
+          <button 
+            className="search-page__button"
+            onClick={() => {
+              setError(null)
+              loadCases()
+            }}
+          >
+            Спробувати ще раз
+          </button>
+          <button 
+            className="search-page__button"
+            onClick={() => navigate('/')}
+            style={{ marginTop: '10px', background: 'var(--tg-theme-secondary-bg-color)', color: 'var(--tg-theme-text-color)' }}
+          >
+            На головну
+          </button>
+        </div>
       </div>
     )
   }
@@ -216,9 +259,20 @@ export default function SearchPage() {
         <div className="search-page__empty">
           <p>Кейси не знайдено.</p>
           <p>Додайте інтереси для кращого пошуку або спробуйте пізніше.</p>
+          {error && <p style={{ color: '#ff4444', marginTop: '10px' }}>{error}</p>}
+          <button 
+            className="search-page__button"
+            onClick={() => {
+              setError(null)
+              loadCases()
+            }}
+          >
+            Спробувати ще раз
+          </button>
           <button 
             className="search-page__button"
             onClick={() => navigate('/')}
+            style={{ marginTop: '10px', background: 'var(--tg-theme-secondary-bg-color)', color: 'var(--tg-theme-text-color)' }}
           >
             На головну
           </button>
