@@ -1,20 +1,20 @@
-import { TelegramWebApp } from '../types/telegram'
+import type { TelegramWebApp } from '../types/telegram'
 
-export function safeBackButtonShow(webApp: TelegramWebApp, onClick: () => void): void {
+function safeBackButtonShow(webApp: TelegramWebApp, onClick: () => void): void {
   if (webApp?.BackButton && webApp.BackButton.isVisible !== undefined) {
     webApp.BackButton.show()
     webApp.BackButton.onClick(onClick)
   }
 }
 
-export function safeBackButtonHide(webApp: TelegramWebApp): void {
+function safeBackButtonHide(webApp: TelegramWebApp): void {
   if (webApp?.BackButton && webApp.BackButton.isVisible !== undefined) {
     webApp.BackButton.hide()
     webApp.BackButton.offClick(() => {})
   }
 }
 
-export function safeShowAlert(webApp: TelegramWebApp | null, message: string): void {
+function safeShowAlert(webApp: TelegramWebApp | null, message: string): void {
   if (!webApp) {
     alert(message)
     return
@@ -30,3 +30,5 @@ export function safeShowAlert(webApp: TelegramWebApp | null, message: string): v
     console.warn('Error showing alert, using fallback:', error)
   }
 }
+
+export { safeBackButtonShow, safeBackButtonHide, safeShowAlert }
