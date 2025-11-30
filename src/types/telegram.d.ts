@@ -1,4 +1,4 @@
-interface TelegramWebApp {
+export interface TelegramWebApp {
   initData: string
   initDataUnsafe: {
     user?: {
@@ -93,9 +93,13 @@ interface TelegramWebApp {
   requestContact: (callback?: (granted: boolean) => void) => void
 }
 
-interface Window {
-  Telegram?: {
-    WebApp: TelegramWebApp
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: TelegramWebApp
+    }
   }
 }
+
+export {}
 
