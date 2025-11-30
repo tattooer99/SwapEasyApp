@@ -1045,6 +1045,8 @@ export function useSupabase() {
       throw new Error('User not initialized')
     }
 
+    console.log('sendMessage: sending message from', currentUser.id, 'to', toUserId, 'text:', messageText)
+
     const { data, error } = await supabase
       .from('messages')
       .insert({
@@ -1060,7 +1062,13 @@ export function useSupabase() {
       `)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('sendMessage: error inserting message:', error)
+      console.error('sendMessage: error details:', JSON.stringify(error, null, 2))
+      throw error
+    }
+
+    console.log('sendMessage: message sent successfully:', data)
     return data as Message
   }
 
