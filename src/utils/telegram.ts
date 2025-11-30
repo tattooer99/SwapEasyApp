@@ -1,13 +1,13 @@
-import type { TelegramWebApp } from '../types/telegram'
+import { TelegramWebApp } from '../types/telegram'
 
-export function safeBackButtonShow(webApp: TelegramWebApp, onClick: () => void) {
+export function safeBackButtonShow(webApp: TelegramWebApp, onClick: () => void): void {
   if (webApp?.BackButton && webApp.BackButton.isVisible !== undefined) {
     webApp.BackButton.show()
     webApp.BackButton.onClick(onClick)
   }
 }
 
-export function safeBackButtonHide(webApp: TelegramWebApp) {
+export function safeBackButtonHide(webApp: TelegramWebApp): void {
   if (webApp?.BackButton && webApp.BackButton.isVisible !== undefined) {
     webApp.BackButton.hide()
     webApp.BackButton.offClick(() => {}) // Remove previous handler
