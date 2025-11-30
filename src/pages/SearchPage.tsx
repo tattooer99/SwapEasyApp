@@ -4,7 +4,7 @@ import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
 import CaseCard from '../components/CaseCard'
 import { Case } from '../types'
-import { safeBackButtonShow, safeBackButtonHide } from '../utils/telegram'
+import { safeBackButtonShow, safeBackButtonHide, safeShowAlert } from '../utils/telegram'
 import './SearchPage.css'
 
 export default function SearchPage() {
@@ -64,9 +64,7 @@ export default function SearchPage() {
       console.error('Error loading cases:', error)
       const errorMessage = error instanceof Error ? error.message : 'Невідома помилка'
       setError('Помилка при завантаженні кейсів: ' + errorMessage)
-      if (webApp) {
-        webApp.showAlert('Помилка при завантаженні кейсів: ' + errorMessage)
-      }
+      safeShowAlert(webApp, 'Помилка при завантаженні кейсів: ' + errorMessage)
     } finally {
       setLoading(false)
     }
@@ -90,16 +88,12 @@ export default function SearchPage() {
       if (webApp?.HapticFeedback) {
         webApp.HapticFeedback.notificationOccurred('success')
       }
-      if (webApp) {
-        webApp.showAlert('Додано до вподобань!')
-      }
+      safeShowAlert(webApp, 'Додано до вподобань!')
       // Переходим к следующему кейсу
       goToNext()
     } catch (error) {
       console.error('Error liking case:', error)
-      if (webApp) {
-        webApp.showAlert('Помилка при додаванні до вподобань')
-      }
+      safeShowAlert(webApp, 'Помилка при додаванні до вподобань')
     }
   }
 
@@ -112,9 +106,7 @@ export default function SearchPage() {
       setCurrentIndex(currentIndex + 1)
     } else {
       // Все кейсы просмотрены
-      if (webApp) {
-        webApp.showAlert('Більше кейсів немає. Спробуйте пізніше або додайте інтереси для кращого пошуку.')
-      }
+      safeShowAlert(webApp, 'Більше кейсів немає. Спробуйте пізніше або додайте інтереси для кращого пошуку.')
       navigate('/')
     }
   }
@@ -124,9 +116,7 @@ export default function SearchPage() {
     if (!currentCase) return
 
     if (myCases.length === 0) {
-      if (webApp) {
-        webApp.showAlert('Спочатку додайте хоча б один кейс')
-      }
+      safeShowAlert(webApp, 'Спочатку додайте хоча б один кейс')
       navigate('/add-case')
       return
     }
@@ -135,9 +125,7 @@ export default function SearchPage() {
 
   const handleSelectMyCaseForExchange = async (myCase: Case) => {
     if (!selectedCaseForExchange || !selectedCaseForExchange.owner) {
-      if (webApp) {
-        webApp.showAlert('Помилка: не вдалося знайти власника кейсу')
-      }
+      safeShowAlert(webApp, 'Помилка: не вдалося знайти власника кейсу')
       return
     }
 
@@ -148,17 +136,15 @@ export default function SearchPage() {
         selectedCaseForExchange.id
       )
       setSelectedCaseForExchange(null)
-      if (webApp) {
-        webApp.HapticFeedback?.notificationOccurred('success')
-        webApp.showAlert('Пропозицію обміну відправлено!')
+      if (webApp?.HapticFeedback) {
+        webApp.HapticFeedback.notificationOccurred('success')
       }
+      safeShowAlert(webApp, 'Пропозицію обміну відправлено!')
       // Переходим к следующему кейсу
       goToNext()
     } catch (error) {
       console.error('Error creating exchange offer:', error)
-      if (webApp) {
-        webApp.showAlert('Помилка при створенні пропозиції')
-      }
+      safeShowAlert(webApp, 'Помилка при створенні пропозиції')
     }
   }
 
