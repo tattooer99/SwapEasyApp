@@ -554,9 +554,9 @@ export function useSupabase() {
       }
     }
 
-    // 3. Если и их нет (или нет региона) - показываем случайные кейсы
+    // 3. Если и их нет (или нет региона, или нет интересов) - показываем случайные кейсы
     if (items.length === 0) {
-      console.log('searchCases: searching for random cases (no region or no cases by region)')
+      console.log('searchCases: searching for random cases (no interests, no region, or no cases by region)')
       const { data, error } = await supabase
         .from('my_items')
         .select(`
