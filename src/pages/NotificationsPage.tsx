@@ -31,13 +31,21 @@ export default function NotificationsPage() {
   }, [webApp, navigate])
 
   useEffect(() => {
-    loadNotifications()
-  }, [])
+    if (currentUser) {
+      loadNotifications()
+    }
+  }, [currentUser])
 
   const loadNotifications = async () => {
     try {
       setLoading(true)
+      console.log('NotificationsPage: loading notifications for user:', currentUser?.id)
       const data = await getNotifications()
+      console.log('NotificationsPage: loaded notifications:', {
+        mutualLikes: data.mutualLikes.length,
+        exchangeOffers: data.exchangeOffers.length,
+        data
+      })
       setNotifications(data)
     } catch (error) {
       console.error('Error loading notifications:', error)
