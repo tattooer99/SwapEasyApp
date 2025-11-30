@@ -736,49 +736,88 @@ export function useSupabase() {
 
     console.log('getNotifications: fetching for user_id:', currentUser.id)
 
-    const [mutualLikesResult, exchangeOffersResult] = await Promise.all([
-      supabase
-        .from('mutual_likes_notifications')
-        .select(`
-          *,
-          user1:user1_id (*),
-          user2:user2_id (*),
-          user1_item:user1_item_id (*),
-          user2_item:user2_item_id (*)
-        `)
-        .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('exchange_offers')
-        .select(`
-          *,
-          from_user:from_user_id (*),
-          to_user:to_user_id (*),
-          offered_item:offered_item_id (*),
-          requested_item:requested_item_id (*)
-        `)
-        .eq('to_user_id', currentUser.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
-    ])
+    // Получаем взаимные лайки без автоматических связей
+    const { data: mutualLikesData, error: mutualLikesError } = await supabase
+      .from('mutual_likes_notifications')
+      .select('*')
+      .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
+      .order('created_at', { ascending: false })
 
-    if (mutualLikesResult.error) {
-      console.error('Error fetching mutual likes:', mutualLikesResult.error)
+    if (mutualLikesError) {
+      console.error('Error fetching mutual likes:', mutualLikesError)
     }
-    if (exchangeOffersResult.error) {
-      console.error('Error fetching exchange offers:', exchangeOffersResult.error)
+
+    // Получаем предложения обмена без автоматических связей
+    const { data: exchangeOffersData, error: exchangeOffersError } = await supabase
+      .from('exchange_offers')
+      .select('*')
+      .eq('to_user_id', currentUser.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+
+    if (exchangeOffersError) {
+      console.error('Error fetching exchange offers:', exchangeOffersError)
+    }
+
+    // Загружаем связанные данные вручную
+    const mutualLikes: MutualLikeNotification[] = []
+    if (mutualLikesData) {
+      for (const notification of mutualLikesData) {
+        // Получаем пользователей
+        const [user1Result, user2Result] = await Promise.all([
+          supabase.from('users').select('*').eq('id', notification.user1_id).single(),
+          supabase.from('users').select('*').eq('id', notification.user2_id).single(),
+        ])
+
+        // Получаем кейсы
+        const [item1Result, item2Result] = await Promise.all([
+          supabase.from('my_items').select('*').eq('id', notification.user1_item_id).single(),
+          supabase.from('my_items').select('*').eq('id', notification.user2_item_id).single(),
+        ])
+
+        mutualLikes.push({
+          ...notification,
+          user1: user1Result.data as User | undefined,
+          user2: user2Result.data as User | undefined,
+          user1_item: item1Result.data as Case | undefined,
+          user2_item: item2Result.data as Case | undefined,
+        } as MutualLikeNotification)
+      }
+    }
+
+    const exchangeOffers: ExchangeOffer[] = []
+    if (exchangeOffersData) {
+      for (const offer of exchangeOffersData) {
+        // Получаем пользователей
+        const [fromUserResult, toUserResult] = await Promise.all([
+          supabase.from('users').select('*').eq('id', offer.from_user_id).single(),
+          supabase.from('users').select('*').eq('id', offer.to_user_id).single(),
+        ])
+
+        // Получаем кейсы
+        const [offeredItemResult, requestedItemResult] = await Promise.all([
+          supabase.from('my_items').select('*').eq('id', offer.offered_item_id).single(),
+          supabase.from('my_items').select('*').eq('id', offer.requested_item_id).single(),
+        ])
+
+        exchangeOffers.push({
+          ...offer,
+          from_user: fromUserResult.data as User | undefined,
+          to_user: toUserResult.data as User | undefined,
+          offered_item: offeredItemResult.data as Case | undefined,
+          requested_item: requestedItemResult.data as Case | undefined,
+        } as ExchangeOffer)
+      }
     }
 
     console.log('getNotifications: results:', {
-      mutualLikes: mutualLikesResult.data?.length || 0,
-      exchangeOffers: exchangeOffersResult.data?.length || 0,
-      mutualLikesData: mutualLikesResult.data,
-      exchangeOffersData: exchangeOffersResult.data
+      mutualLikes: mutualLikes.length,
+      exchangeOffers: exchangeOffers.length,
     })
 
     return {
-      mutualLikes: (mutualLikesResult.data || []) as MutualLikeNotification[],
-      exchangeOffers: (exchangeOffersResult.data || []) as ExchangeOffer[],
+      mutualLikes,
+      exchangeOffers,
     }
   }
 
@@ -1225,15 +1264,9 @@ export function useSupabase() {
     if (!currentUser) return []
 
     // Получаем все завершенные обмены (accepted), где пользователь участвовал
-    const { data, error } = await supabase
+    const { data: offersData, error } = await supabase
       .from('exchange_offers')
-      .select(`
-        *,
-        from_user:from_user_id (*),
-        to_user:to_user_id (*),
-        offered_item:offered_item_id (*),
-        requested_item:requested_item_id (*)
-      `)
+      .select('*')
       .eq('status', 'accepted')
       .or(`from_user_id.eq.${currentUser.id},to_user_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false })
@@ -1243,7 +1276,33 @@ export function useSupabase() {
       return []
     }
 
-    return (data || []) as ExchangeOffer[]
+    // Загружаем связанные данные вручную
+    const exchangeOffers: ExchangeOffer[] = []
+    if (offersData) {
+      for (const offer of offersData) {
+        // Получаем пользователей
+        const [fromUserResult, toUserResult] = await Promise.all([
+          supabase.from('users').select('*').eq('id', offer.from_user_id).single(),
+          supabase.from('users').select('*').eq('id', offer.to_user_id).single(),
+        ])
+
+        // Получаем кейсы
+        const [offeredItemResult, requestedItemResult] = await Promise.all([
+          supabase.from('my_items').select('*').eq('id', offer.offered_item_id).single(),
+          supabase.from('my_items').select('*').eq('id', offer.requested_item_id).single(),
+        ])
+
+        exchangeOffers.push({
+          ...offer,
+          from_user: fromUserResult.data as User | undefined,
+          to_user: toUserResult.data as User | undefined,
+          offered_item: offeredItemResult.data as Case | undefined,
+          requested_item: requestedItemResult.data as Case | undefined,
+        } as ExchangeOffer)
+      }
+    }
+
+    return exchangeOffers
   }
 
   async function getUserRating(userId: number): Promise<{ rating: number; successful_exchanges: number }> {
