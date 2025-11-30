@@ -420,10 +420,7 @@ export function useSupabase() {
     }) as Case[]
   }
 
-  async function searchCases(filters?: {
-    item_type?: string
-    region?: string
-  }): Promise<Case[]> {
+  async function searchCases(): Promise<Case[]> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     if (!supabaseUrl) {
       console.warn('Supabase не настроен, повертаємо порожній список')
@@ -432,46 +429,176 @@ export function useSupabase() {
 
     if (!currentUser) return []
 
-    // Сначала получаем пользователей по региону, если указан фильтр
-    let userIds: number[] | null = null
-    if (filters?.region) {
-      const { data: usersByRegion } = await supabase
-        .from('users')
-        .select('id')
-        .eq('region', filters.region)
+    // Получаем регион пользователя
+    const userRegion = currentUser.region
+
+    // Получаем список уже лайкнутых кейсов
+    const { data: likedItems } = await supabase
+      .from('likes')
+      .select('item_id')
+      .eq('user_id', currentUser.id)
+
+    const likedItemIds = likedItems?.map(l => l.item_id) || []
+    console.log('searchCases: liked item_ids:', likedItemIds)
+
+    // Получаем интересы пользователя
+    const interests = await getInterests()
+    console.log('searchCases: user interests:', interests)
+
+    let items: any[] = []
+
+    // 1. Если есть интересы - ищем кейсы по интересам с приоритетом по региону
+    if (interests.length > 0) {
+      // Собираем все возможные комбинации интересов
+      const allMatchingItems: any[] = []
       
-      if (usersByRegion) {
-        userIds = usersByRegion.map(u => u.id)
-        if (userIds.length === 0) return []
+      for (const interest of interests) {
+        const { data, error } = await supabase
+          .from('my_items')
+          .select(`
+            *,
+            users:user_id (
+              id,
+              telegram_id,
+              name,
+              username,
+              region
+            )
+          `)
+          .neq('user_id', currentUser.id)
+          .eq('item_type', interest.item_type)
+          .eq('price_category', interest.price_category)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error searching by interest:', interest, error)
+        } else if (data) {
+          // Фильтруем лайкнутые кейсы вручную
+          const filtered = likedItemIds.length > 0 
+            ? data.filter(item => !likedItemIds.includes(item.id))
+            : data
+          allMatchingItems.push(...filtered)
+        }
+      }
+
+      // Удаляем дубликаты по id
+      const uniqueItems = allMatchingItems.filter((item, index, self) =>
+        index === self.findIndex((t) => t.id === item.id)
+      )
+
+      items = uniqueItems
+      console.log('searchCases: found cases by interests:', items.length)
+
+      // Сортируем по региону: сначала кейсы из того же региона
+      if (userRegion && items.length > 0) {
+        items.sort((a, b) => {
+          const aRegion = Array.isArray(a.users) ? a.users[0]?.region : a.users?.region
+          const bRegion = Array.isArray(b.users) ? b.users[0]?.region : b.users?.region
+          const aMatches = aRegion === userRegion ? 1 : 0
+          const bMatches = bRegion === userRegion ? 1 : 0
+          return bMatches - aMatches
+        })
       }
     }
 
-    let query = supabase
-      .from('my_items')
-      .select(`
-        *,
-        users:user_id (
-          id,
-          telegram_id,
-          name,
-          username,
-          region
-        )
-      `)
-      .neq('user_id', currentUser.id)
+    // 2. Если нет кейсов по интересам - ищем по региону
+    if (items.length === 0 && userRegion) {
+      const { data: usersByRegion } = await supabase
+        .from('users')
+        .select('id')
+        .eq('region', userRegion)
 
-    if (userIds) {
-      query = query.in('user_id', userIds)
+      if (usersByRegion && usersByRegion.length > 0) {
+        const userIds = usersByRegion.map(u => u.id)
+
+        const { data, error } = await supabase
+          .from('my_items')
+          .select(`
+            *,
+            users:user_id (
+              id,
+              telegram_id,
+              name,
+              username,
+              region
+            )
+          `)
+          .neq('user_id', currentUser.id)
+          .in('user_id', userIds)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (error) {
+          console.error('Error searching by region:', error)
+        } else if (data) {
+          // Фильтруем лайкнутые кейсы вручную
+          items = data.filter(item => !likedItemIds.includes(item.id))
+          console.log('searchCases: found cases by region:', items.length)
+        }
+      }
     }
 
-    if (filters?.item_type) {
-      query = query.eq('item_type', filters.item_type)
+    // 3. Если и их нет - показываем случайные кейсы
+    if (items.length === 0) {
+      const { data, error } = await supabase
+        .from('my_items')
+        .select(`
+          *,
+          users:user_id (
+            id,
+            telegram_id,
+            name,
+            username,
+            region
+          )
+        `)
+        .neq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error searching random cases:', error)
+      } else if (data) {
+        // Фильтруем лайкнутые кейсы вручную
+        items = data.filter(item => !likedItemIds.includes(item.id))
+        console.log('searchCases: found random cases:', items.length)
+
+        // Сортируем по региону если есть
+        if (userRegion && items.length > 0) {
+          items.sort((a, b) => {
+            const aRegion = Array.isArray(a.users) ? a.users[0]?.region : a.users?.region
+            const bRegion = Array.isArray(b.users) ? b.users[0]?.region : b.users?.region
+            const aMatches = aRegion === userRegion ? 1 : 0
+            const bMatches = bRegion === userRegion ? 1 : 0
+            return bMatches - aMatches
+          })
+        }
+
+        // Перемешиваем для случайности (кроме тех что из того же региона)
+        const sameRegion = items.filter(item => {
+          const region = Array.isArray(item.users) ? item.users[0]?.region : item.users?.region
+          return region === userRegion
+        })
+        const otherRegion = items.filter(item => {
+          const region = Array.isArray(item.users) ? item.users[0]?.region : item.users?.region
+          return region !== userRegion
+        })
+        
+        // Перемешиваем другие регионы
+        for (let i = otherRegion.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [otherRegion[i], otherRegion[j]] = [otherRegion[j], otherRegion[i]]
+        }
+        
+        items = [...sameRegion, ...otherRegion]
+      }
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false })
+    // Фильтруем лайкнутые кейсы для результатов по интересам
+    if (likedItemIds.length > 0 && items.length > 0) {
+      items = items.filter(item => !likedItemIds.includes(item.id))
+    }
 
-    if (error) throw error
-    return (data || []).map((item: any) => ({
+    return items.map((item: any) => ({
       ...item,
       owner: Array.isArray(item.users) ? item.users[0] : item.users,
     })) as Case[]
