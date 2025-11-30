@@ -729,7 +729,12 @@ export function useSupabase() {
     mutualLikes: MutualLikeNotification[]
     exchangeOffers: ExchangeOffer[]
   }> {
-    if (!currentUser) return { mutualLikes: [], exchangeOffers: [] }
+    if (!currentUser) {
+      console.log('getNotifications: currentUser is null')
+      return { mutualLikes: [], exchangeOffers: [] }
+    }
+
+    console.log('getNotifications: fetching for user_id:', currentUser.id)
 
     const [mutualLikesResult, exchangeOffersResult] = await Promise.all([
       supabase
@@ -756,6 +761,20 @@ export function useSupabase() {
         .eq('status', 'pending')
         .order('created_at', { ascending: false }),
     ])
+
+    if (mutualLikesResult.error) {
+      console.error('Error fetching mutual likes:', mutualLikesResult.error)
+    }
+    if (exchangeOffersResult.error) {
+      console.error('Error fetching exchange offers:', exchangeOffersResult.error)
+    }
+
+    console.log('getNotifications: results:', {
+      mutualLikes: mutualLikesResult.data?.length || 0,
+      exchangeOffers: exchangeOffersResult.data?.length || 0,
+      mutualLikesData: mutualLikesResult.data,
+      exchangeOffersData: exchangeOffersResult.data
+    })
 
     return {
       mutualLikes: (mutualLikesResult.data || []) as MutualLikeNotification[],
