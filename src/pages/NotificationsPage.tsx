@@ -4,6 +4,7 @@ import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
 import CaseCard from '../components/CaseCard'
 import { ExchangeOffer, MutualLikeNotification, Case } from '../types'
+import { safeShowAlert } from '../utils/telegram'
 import './NotificationsPage.css'
 
 export default function NotificationsPage() {
@@ -40,9 +41,7 @@ export default function NotificationsPage() {
       setNotifications(data)
     } catch (error) {
       console.error('Error loading notifications:', error)
-      if (webApp) {
-        webApp.showAlert('Помилка при завантаженні сповіщень')
-      }
+      safeShowAlert(webApp, 'Помилка при завантаженні сповіщень')
     } finally {
       setLoading(false)
     }
@@ -55,14 +54,10 @@ export default function NotificationsPage() {
       if (webApp?.HapticFeedback) {
         webApp.HapticFeedback.notificationOccurred('success')
       }
-      if (webApp) {
-        webApp.showAlert(status === 'accepted' ? 'Обмін прийнято!' : 'Обмін відхилено')
-      }
+      safeShowAlert(webApp, status === 'accepted' ? 'Обмін прийнято!' : 'Обмін відхилено')
     } catch (error) {
       console.error('Error responding to offer:', error)
-      if (webApp) {
-        webApp.showAlert('Помилка при відповіді на пропозицію')
-      }
+      safeShowAlert(webApp, 'Помилка при відповіді на пропозицію')
     }
   }
 
