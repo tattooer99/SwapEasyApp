@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { TelegramWebApp } from '../types/telegram'
 
 export interface TelegramUser {
   id: number
@@ -76,7 +77,7 @@ function createMockWebApp(): TelegramWebApp {
     openLink: () => {},
     openTelegramLink: () => {},
     openInvoice: () => {},
-    showPopup: (_params, callback) => {
+    showPopup: (_params: any, callback?: (result: string) => void) => {
       if (callback) callback('ok')
     },
     showAlert: (message: string, callback?: () => void) => {
