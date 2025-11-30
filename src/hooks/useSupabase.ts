@@ -1071,23 +1071,68 @@ export function useSupabase() {
       return []
     }
 
-    if (!currentUser) return []
+    if (!currentUser) {
+      console.warn('getMessages: currentUser is null')
+      return []
+    }
+
+    console.log('getMessages: fetching messages between', currentUser.id, 'and', otherUserId)
 
     // Получаем все сообщения между текущим пользователем и другим пользователем
-    const { data, error } = await supabase
-      .from('messages')
-      .select(`
-        *,
-        from_user:from_user_id (*),
-        to_user:to_user_id (*)
-      `)
-      .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${otherUserId}),and(from_user_id.eq.${otherUserId},to_user_id.eq.${currentUser.id})`)
-      .order('created_at', { ascending: true })
+    // Используем два запроса и объединяем результаты для надежности
+    const [sentMessages, receivedMessages] = await Promise.all([
+      // Сообщения, которые текущий пользователь отправил другому
+      supabase
+        .from('messages')
+        .select(`
+          *,
+          from_user:from_user_id (*),
+          to_user:to_user_id (*)
+        `)
+        .eq('from_user_id', currentUser.id)
+        .eq('to_user_id', otherUserId)
+        .order('created_at', { ascending: true }),
+      
+      // Сообщения, которые текущий пользователь получил от другого
+      supabase
+        .from('messages')
+        .select(`
+          *,
+          from_user:from_user_id (*),
+          to_user:to_user_id (*)
+        `)
+        .eq('from_user_id', otherUserId)
+        .eq('to_user_id', currentUser.id)
+        .order('created_at', { ascending: true })
+    ])
+
+    if (sentMessages.error) {
+      console.error('Error fetching sent messages:', sentMessages.error)
+    }
+    if (receivedMessages.error) {
+      console.error('Error fetching received messages:', receivedMessages.error)
+    }
+
+    // Объединяем результаты и сортируем по времени
+    const allMessages = [
+      ...(sentMessages.data || []),
+      ...(receivedMessages.data || [])
+    ].sort((a, b) => {
+      const timeA = new Date(a.created_at || 0).getTime()
+      const timeB = new Date(b.created_at || 0).getTime()
+      return timeA - timeB
+    })
+
+    const data = allMessages
+    const error = sentMessages.error || receivedMessages.error
 
     if (error) {
       console.error('Error fetching messages:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
       return []
     }
+
+    console.log('getMessages: fetched', data?.length || 0, 'messages')
 
     // Помечаем входящие сообщения как прочитанные
     const unreadMessages = (data || []).filter(
@@ -1095,6 +1140,7 @@ export function useSupabase() {
     )
 
     if (unreadMessages.length > 0) {
+      console.log('getMessages: marking', unreadMessages.length, 'messages as read')
       const unreadIds = unreadMessages.map((msg: Message) => msg.id)
       await supabase
         .from('messages')
