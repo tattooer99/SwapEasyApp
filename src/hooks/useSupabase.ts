@@ -1400,6 +1400,56 @@ export function useSupabase() {
     console.log('deleteChat: chat deleted successfully')
   }
 
+  async function deleteAllNotifications(): Promise<void> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) {
+      throw new Error('Supabase не настроен')
+    }
+
+    if (!currentUser) {
+      throw new Error('User not initialized')
+    }
+
+    console.log('deleteAllNotifications: deleting all notifications for user:', currentUser.id)
+
+    // Удаляем все взаимные лайки, где текущий пользователь участвует
+    const { error: mutualLikesError } = await supabase
+      .from('mutual_likes_notifications')
+      .delete()
+      .or(`user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`)
+
+    if (mutualLikesError) {
+      console.error('Error deleting mutual likes notifications:', mutualLikesError)
+      throw mutualLikesError
+    }
+
+    // Удаляем входящие предложения обмена (pending)
+    const { error: pendingOffersError } = await supabase
+      .from('exchange_offers')
+      .delete()
+      .eq('to_user_id', currentUser.id)
+      .eq('status', 'pending')
+
+    if (pendingOffersError) {
+      console.error('Error deleting pending exchange offers:', pendingOffersError)
+      throw pendingOffersError
+    }
+
+    // Удаляем ответы на предложения обмена (accepted/declined), где текущий пользователь отправитель
+    const { error: responsesError } = await supabase
+      .from('exchange_offers')
+      .delete()
+      .eq('from_user_id', currentUser.id)
+      .in('status', ['accepted', 'declined'])
+
+    if (responsesError) {
+      console.error('Error deleting exchange responses:', responsesError)
+      throw responsesError
+    }
+
+    console.log('deleteAllNotifications: all notifications deleted successfully')
+  }
+
   async function getExchangeHistory(): Promise<ExchangeOffer[]> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     if (!supabaseUrl) {
@@ -1500,6 +1550,7 @@ export function useSupabase() {
     getUnreadNotificationsCount,
     getUnreadMessagesCount,
     deleteChat,
+    deleteAllNotifications,
   }
 }
 
