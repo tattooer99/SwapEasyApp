@@ -1303,6 +1303,49 @@ export function useSupabase() {
     return count || 0
   }
 
+  async function deleteChat(otherUserId: number): Promise<void> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) {
+      throw new Error('Supabase не настроен')
+    }
+
+    if (!currentUser) {
+      throw new Error('User not initialized')
+    }
+
+    console.log('deleteChat: deleting chat between', currentUser.id, 'and', otherUserId)
+
+    // Удаляем все сообщения между текущим пользователем и другим пользователем
+    // Используем два отдельных запроса для надежности
+    const [deleteSentResult, deleteReceivedResult] = await Promise.all([
+      // Удаляем сообщения, которые текущий пользователь отправил другому
+      supabase
+        .from('messages')
+        .delete()
+        .eq('from_user_id', currentUser.id)
+        .eq('to_user_id', otherUserId),
+      
+      // Удаляем сообщения, которые текущий пользователь получил от другого
+      supabase
+        .from('messages')
+        .delete()
+        .eq('from_user_id', otherUserId)
+        .eq('to_user_id', currentUser.id)
+    ])
+
+    if (deleteSentResult.error) {
+      console.error('Error deleting sent messages:', deleteSentResult.error)
+      throw deleteSentResult.error
+    }
+
+    if (deleteReceivedResult.error) {
+      console.error('Error deleting received messages:', deleteReceivedResult.error)
+      throw deleteReceivedResult.error
+    }
+
+    console.log('deleteChat: chat deleted successfully')
+  }
+
   async function getExchangeHistory(): Promise<ExchangeOffer[]> {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     if (!supabaseUrl) {
@@ -1402,6 +1445,7 @@ export function useSupabase() {
     getUserRating,
     getUnreadNotificationsCount,
     getUnreadMessagesCount,
+    deleteChat,
   }
 }
 
