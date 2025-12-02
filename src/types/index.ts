@@ -19,6 +19,7 @@ export interface Case {
   photo1?: string
   photo2?: string
   photo3?: string
+  is_archived?: boolean
   created_at?: string
   owner?: User
 }
