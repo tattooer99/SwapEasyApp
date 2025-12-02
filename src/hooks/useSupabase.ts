@@ -270,6 +270,7 @@ export function useSupabase() {
       photo1: caseData.photo1 || null,
       photo2: caseData.photo2 || null,
       photo3: caseData.photo3 || null,
+      is_archived: false, // Новые кейсы всегда активные
     }
     
     console.log('createCase: inserting case with photos:', {
@@ -349,6 +350,7 @@ export function useSupabase() {
       .from('my_items')
       .select('id, user_id, title, item_type, description, price_category, photo1, photo2, photo3, created_at')
       .eq('user_id', userId)
+      .eq('is_archived', false) // Только активные кейсы
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -479,6 +481,7 @@ export function useSupabase() {
           .neq('user_id', currentUser.id)
           .eq('item_type', interest.item_type)
           .eq('price_category', interest.price_category)
+          .eq('is_archived', false) // Только активные кейсы
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -538,6 +541,7 @@ export function useSupabase() {
           `)
           .neq('user_id', currentUser.id)
           .in('user_id', userIds)
+          .eq('is_archived', false) // Только активные кейсы
           .order('created_at', { ascending: false })
           .limit(10)
 
@@ -570,6 +574,7 @@ export function useSupabase() {
           )
         `)
         .neq('user_id', currentUser.id)
+        .eq('is_archived', false) // Только активные кейсы
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -875,7 +880,7 @@ export function useSupabase() {
     // Сначала получаем информацию об обмене
     const { data: offer, error: fetchError } = await supabase
       .from('exchange_offers')
-      .select('from_user_id, to_user_id')
+      .select('from_user_id, to_user_id, offered_item_id, requested_item_id')
       .eq('id', offerId)
       .single()
 
@@ -890,7 +895,7 @@ export function useSupabase() {
 
     if (error) throw error
 
-    // Если обмен принят, обновляем рейтинг обоих пользователей
+    // Если обмен принят, обновляем рейтинг обоих пользователей и архивируем кейсы
     if (status === 'accepted') {
       // Получаем текущие значения рейтинга для обоих пользователей
       const [fromUserResult, toUserResult] = await Promise.all([
@@ -917,6 +922,25 @@ export function useSupabase() {
             successful_exchanges: (toUserResult.data.successful_exchanges || 0) + 1,
           })
           .eq('id', offer.to_user_id)
+      }
+
+      // Архивируем оба кейса (помечаем как is_archived = true)
+      const [archiveOfferedError, archiveRequestedError] = await Promise.all([
+        supabase
+          .from('my_items')
+          .update({ is_archived: true })
+          .eq('id', offer.offered_item_id),
+        supabase
+          .from('my_items')
+          .update({ is_archived: true })
+          .eq('id', offer.requested_item_id),
+      ])
+
+      if (archiveOfferedError) {
+        console.error('Error archiving offered item:', archiveOfferedError)
+      }
+      if (archiveRequestedError) {
+        console.error('Error archiving requested item:', archiveRequestedError)
       }
     }
   }
@@ -1524,6 +1548,55 @@ export function useSupabase() {
     }
   }
 
+  async function getArchivedCases(): Promise<Case[]> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) {
+      console.warn('Supabase не настроен, повертаємо порожній список')
+      return []
+    }
+
+    if (!currentUser) {
+      console.warn('getArchivedCases: currentUser is null')
+      return []
+    }
+
+    const { data, error } = await supabase
+      .from('my_items')
+      .select('id, user_id, title, item_type, description, price_category, photo1, photo2, photo3, is_archived, created_at')
+      .eq('user_id', currentUser.id)
+      .eq('is_archived', true) // Только архивные кейсы
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching archived cases:', error)
+      return []
+    }
+
+    return (data || []) as Case[]
+  }
+
+  async function restoreCase(caseId: number): Promise<void> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) {
+      throw new Error('Supabase не настроен')
+    }
+
+    if (!currentUser) {
+      throw new Error('User not initialized')
+    }
+
+    const { error } = await supabase
+      .from('my_items')
+      .update({ is_archived: false })
+      .eq('id', caseId)
+      .eq('user_id', currentUser.id)
+
+    if (error) {
+      console.error('Error restoring case:', error)
+      throw error
+    }
+  }
+
   return {
     currentUser,
     loading,
@@ -1551,6 +1624,8 @@ export function useSupabase() {
     getUnreadMessagesCount,
     deleteChat,
     deleteAllNotifications,
+    getArchivedCases,
+    restoreCase,
   }
 }
 
