@@ -11,7 +11,7 @@ import EditCasePage from './pages/EditCasePage'
 import UserCasesPage from './pages/UserCasesPage'
 import ChatPage from './pages/ChatPage'
 import ExchangeHistoryPage from './pages/ExchangeHistoryPage'
-import ChatsPage from './pages/ChatsPage.tsx'
+import ChatsPage from './pages/ChatsPage'
 
 function App() {
   useEffect(() => {
