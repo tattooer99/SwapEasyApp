@@ -10,13 +10,14 @@ import './NotificationsPage.css'
 export default function NotificationsPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
-  const { currentUser, getNotifications, respondToExchangeOffer } = useSupabase()
+  const { currentUser, getNotifications, respondToExchangeOffer, deleteAllNotifications } = useSupabase()
   const [notifications, setNotifications] = useState<{
     mutualLikes: MutualLikeNotification[]
     exchangeOffers: ExchangeOffer[]
     exchangeResponses: ExchangeOffer[]
   }>({ mutualLikes: [], exchangeOffers: [], exchangeResponses: [] })
   const [loading, setLoading] = useState(true)
+  const [deletingAll, setDeletingAll] = useState(false)
 
   useEffect(() => {
     if (webApp?.BackButton) {
@@ -71,6 +72,28 @@ export default function NotificationsPage() {
     }
   }
 
+  const handleDeleteAllNotifications = async () => {
+    const confirmed = window.confirm('Ви впевнені, що хочете видалити всі сповіщення? Цю дію неможливо скасувати.')
+    if (!confirmed) return
+
+    try {
+      setDeletingAll(true)
+      await deleteAllNotifications()
+      await loadNotifications()
+      safeShowAlert(webApp, 'Всі сповіщення видалено')
+      
+      if (webApp?.HapticFeedback) {
+        webApp.HapticFeedback.notificationOccurred('success')
+      }
+    } catch (error) {
+      console.error('Error deleting all notifications:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      safeShowAlert(webApp, 'Помилка при видаленні сповіщень: ' + errorMessage)
+    } finally {
+      setDeletingAll(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="notifications-page">
@@ -83,7 +106,18 @@ export default function NotificationsPage() {
 
   return (
     <div className="notifications-page">
-      <h2 className="notifications-page__title">Сповіщення</h2>
+      <div className="notifications-page__header">
+        <h2 className="notifications-page__title">Сповіщення</h2>
+        {hasNotifications && (
+          <button
+            className="notifications-page__delete-all-button"
+            onClick={handleDeleteAllNotifications}
+            disabled={deletingAll}
+          >
+            {deletingAll ? '...' : '🗑️ Видалити всі'}
+          </button>
+        )}
+      </div>
 
       {!hasNotifications && (
         <div className="notifications-page__empty">
