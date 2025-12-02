@@ -11,6 +11,7 @@ import EditCasePage from './pages/EditCasePage'
 import UserCasesPage from './pages/UserCasesPage'
 import ChatPage from './pages/ChatPage'
 import ExchangeHistoryPage from './pages/ExchangeHistoryPage'
+import ChatsPage from './pages/ChatsPage'
 
 function App() {
   useEffect(() => {
@@ -36,6 +37,7 @@ function App() {
         <Route path="/user-cases/:userId" element={<UserCasesPage />} />
         <Route path="/chat/:userId" element={<ChatPage />} />
         <Route path="/exchange-history" element={<ExchangeHistoryPage />} />
+        <Route path="/chats" element={<ChatsPage />} />
       </Routes>
     </BrowserRouter>
   )
