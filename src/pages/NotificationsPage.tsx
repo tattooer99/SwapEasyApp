@@ -14,7 +14,8 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<{
     mutualLikes: MutualLikeNotification[]
     exchangeOffers: ExchangeOffer[]
-  }>({ mutualLikes: [], exchangeOffers: [] })
+    exchangeResponses: ExchangeOffer[]
+  }>({ mutualLikes: [], exchangeOffers: [], exchangeResponses: [] })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function NotificationsPage() {
       console.log('NotificationsPage: loaded notifications:', {
         mutualLikes: data.mutualLikes.length,
         exchangeOffers: data.exchangeOffers.length,
+        exchangeResponses: data.exchangeResponses.length,
         data
       })
       setNotifications(data)
@@ -77,7 +79,7 @@ export default function NotificationsPage() {
     )
   }
 
-  const hasNotifications = notifications.mutualLikes.length > 0 || notifications.exchangeOffers.length > 0
+  const hasNotifications = notifications.mutualLikes.length > 0 || notifications.exchangeOffers.length > 0 || notifications.exchangeResponses.length > 0
 
   return (
     <div className="notifications-page">
@@ -201,6 +203,71 @@ export default function NotificationsPage() {
                   >
                     💬 Написати
                   </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {notifications.exchangeResponses.length > 0 && (
+        <div className="notifications-page__section">
+          <h3 className="notifications-page__section-title">Відповіді на пропозиції обміну</h3>
+          {notifications.exchangeResponses.map((offer) => {
+            if (!offer.offered_item || !offer.requested_item || !offer.to_user) return null
+
+            const isAccepted = offer.status === 'accepted'
+            const isDeclined = offer.status === 'declined'
+
+            return (
+              <div key={offer.id} className="notifications-page__notification">
+                <div className="notifications-page__notification-header">
+                  <span>
+                    {isAccepted && '✅ '}
+                    {isDeclined && '❌ '}
+                    {offer.to_user.name} {isAccepted ? 'прийняв' : 'відхилив'} вашу пропозицію обміну
+                  </span>
+                </div>
+                <div className="notifications-page__notification-content">
+                  <div className="notifications-page__notification-item">
+                    <p className="notifications-page__notification-label">Ви пропонували:</p>
+                    <CaseCard 
+                      case={offer.offered_item as Case} 
+                      showActions={false}
+                    />
+                  </div>
+                  <div className="notifications-page__notification-item">
+                    <p className="notifications-page__notification-label">Ви хотіли їх:</p>
+                    <CaseCard 
+                      case={offer.requested_item as Case} 
+                      showActions={false}
+                      onViewUser={() => {
+                        if (offer.to_user?.id) {
+                          navigate(`/user-cases/${offer.to_user.id}`)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="notifications-page__notification-actions">
+                  <button
+                    className="notifications-page__action-button notifications-page__action-button--chat"
+                    onClick={() => {
+                      if (offer.to_user?.id) {
+                        navigate(`/chat/${offer.to_user.id}`)
+                      }
+                    }}
+                  >
+                    💬 Написати
+                  </button>
+                  {isAccepted && (
+                    <button
+                      className="notifications-page__action-button"
+                      onClick={() => navigate('/exchange-history')}
+                    >
+                      📜 Переглянути історію
+                    </button>
+                  )}
                 </div>
               </div>
             )
