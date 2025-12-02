@@ -53,6 +53,13 @@
   gap: 8px;
 }
 
+.chats-page__chat-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
 .chats-page__chat-item {
   display: flex;
   align-items: flex-start;
@@ -66,6 +73,7 @@
   transition: opacity 0.2s;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  flex: 1;
 }
 
 .chats-page__chat-item:active {
@@ -178,5 +186,43 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chats-page__delete-button {
+  background: transparent;
+  border: none;
+  color: var(--tg-theme-hint-color);
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.chats-page__delete-button:active {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #ff3b30;
+}
+
+.chats-page__delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .chats-page__delete-button {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    padding: 6px;
+  }
 }
 
