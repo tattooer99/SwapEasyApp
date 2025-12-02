@@ -1207,14 +1207,10 @@ export function useSupabase() {
 
     if (!currentUser) return []
 
-    // Получаем все уникальные пользователи, с которыми есть переписка
+    // Получаем все сообщения без автоматических связей
     const { data: messages, error } = await supabase
       .from('messages')
-      .select(`
-        *,
-        from_user:from_user_id (*),
-        to_user:to_user_id (*)
-      `)
+      .select('*')
       .or(`from_user_id.eq.${currentUser.id},to_user_id.eq.${currentUser.id}`)
       .order('created_at', { ascending: false })
 
@@ -1223,11 +1219,36 @@ export function useSupabase() {
       return []
     }
 
+    if (!messages || messages.length === 0) return []
+
+    // Получаем уникальные ID пользователей
+    const userIds = new Set<number>()
+    messages.forEach((msg: any) => {
+      if (msg.from_user_id !== currentUser.id) userIds.add(msg.from_user_id)
+      if (msg.to_user_id !== currentUser.id) userIds.add(msg.to_user_id)
+    })
+
+    // Загружаем пользователей
+    const usersMap = new Map<number, User>()
+    if (userIds.size > 0) {
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('*')
+        .in('id', Array.from(userIds))
+
+      if (!usersError && users) {
+        users.forEach((user) => {
+          usersMap.set(user.id, user as User)
+        })
+      }
+    }
+
     // Группируем по пользователям
     const chatsMap = new Map<number, { user: User; messages: Message[] }>()
 
-    ;(messages || []).forEach((msg: Message) => {
-      const otherUser = msg.from_user_id === currentUser.id ? msg.to_user : msg.from_user
+    messages.forEach((msg: any) => {
+      const otherUserId = msg.from_user_id === currentUser.id ? msg.to_user_id : msg.from_user_id
+      const otherUser = usersMap.get(otherUserId)
       if (!otherUser) return
 
       if (!chatsMap.has(otherUser.id)) {
@@ -1252,6 +1273,34 @@ export function useSupabase() {
         unreadCount,
       }
     })
+  }
+
+  async function getUnreadNotificationsCount(): Promise<number> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl || !currentUser) return 0
+
+    // Считаем непрочитанные предложения обмена
+    const { count } = await supabase
+      .from('exchange_offers')
+      .select('*', { count: 'exact', head: true })
+      .eq('to_user_id', currentUser.id)
+      .eq('status', 'pending')
+
+    return count || 0
+  }
+
+  async function getUnreadMessagesCount(): Promise<number> {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl || !currentUser) return 0
+
+    // Считаем непрочитанные сообщения
+    const { count } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('to_user_id', currentUser.id)
+      .eq('is_read', false)
+
+    return count || 0
   }
 
   async function getExchangeHistory(): Promise<ExchangeOffer[]> {
@@ -1351,6 +1400,8 @@ export function useSupabase() {
     getChats,
     getExchangeHistory,
     getUserRating,
+    getUnreadNotificationsCount,
+    getUnreadMessagesCount,
   }
 }
 
