@@ -1,135 +1,64 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
-import ChatBubble from '../components/ChatBubble'
-import { Message } from '../types'
-import './ChatPage.css'
+import { safeBackButtonShow, safeBackButtonHide } from '../utils/telegram'
+import './ChatsPage.css'
 
-export default function ChatPage() {
+interface Chat {
+  user: {
+    id: number
+    name: string
+    region?: string | null
+  }
+  lastMessage?: {
+    message_text: string
+    created_at?: string
+  }
+  unreadCount: number
+}
+
+export default function ChatsPage() {
   const navigate = useNavigate()
-  const { userId } = useParams<{ userId: string }>()
   const { webApp } = useTelegram()
-  const { currentUser, getUserCases, sendMessage, getMessages } = useSupabase()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [otherUser, setOtherUser] = useState<{ id: number; name: string; region?: string } | null>(null)
-  const [newMessage, setNewMessage] = useState('')
+  const { currentUser, getChats } = useSupabase()
+  const [chats, setChats] = useState<Chat[]>([])
   const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (webApp?.BackButton) {
-      webApp.BackButton.show()
-      webApp.BackButton.onClick(() => navigate(-1))
+    if (webApp) {
+      safeBackButtonShow(webApp, () => navigate('/'))
     }
 
     return () => {
-      if (webApp?.BackButton) {
-        webApp.BackButton.hide()
+      if (webApp) {
+        safeBackButtonHide(webApp)
       }
     }
   }, [webApp, navigate])
 
   useEffect(() => {
-    if (userId && currentUser) {
-      loadChatData()
-      // Обновляем сообщения каждые 3 секунды
+    if (currentUser) {
+      loadChats()
+      // Обновляем список чатов каждые 5 секунд
       const interval = setInterval(() => {
-        loadMessages()
-      }, 3000)
+        loadChats()
+      }, 5000)
 
       return () => clearInterval(interval)
     }
-  }, [userId, currentUser])
+  }, [currentUser])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const loadChatData = async () => {
-    if (!userId || !currentUser) return
-
+  const loadChats = async () => {
     try {
       setLoading(true)
-      
-      // Получаем информацию о пользователе
-      const userCasesData = await getUserCases(Number(userId))
-      setOtherUser({
-        id: userCasesData.user.id,
-        name: userCasesData.user.name,
-        region: userCasesData.user.region || undefined,
-      })
-
-      // Загружаем сообщения
-      await loadMessages()
+      const data = await getChats()
+      setChats(data)
     } catch (error) {
-      console.error('Error loading chat data:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      if (webApp) {
-        webApp.showAlert('Помилка при завантаженні чату: ' + errorMessage)
-      } else {
-        alert('Помилка при завантаженні чату: ' + errorMessage)
-      }
-      navigate(-1)
+      console.error('Error loading chats:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const loadMessages = async () => {
-    if (!userId || !currentUser) {
-      console.log('loadMessages: missing userId or currentUser', { userId, currentUser: currentUser?.id })
-      return
-    }
-
-    try {
-      console.log('loadMessages: loading messages for user', Number(userId))
-      const data = await getMessages(Number(userId))
-      console.log('loadMessages: received', data.length, 'messages')
-      setMessages(data)
-    } catch (error) {
-      console.error('Error loading messages:', error)
-    }
-  }
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!newMessage.trim() || !userId || !currentUser || sending) return
-
-    const messageText = newMessage.trim()
-    setNewMessage('')
-    setSending(true)
-
-    try {
-      console.log('handleSendMessage: attempting to send message', { userId, messageText, currentUser: currentUser?.id })
-      const sentMessage = await sendMessage(Number(userId), messageText)
-      console.log('handleSendMessage: message sent successfully', sentMessage)
-      setMessages((prev) => [...prev, sentMessage])
-      
-      if (webApp?.HapticFeedback) {
-        webApp.HapticFeedback.notificationOccurred('success')
-      }
-    } catch (error) {
-      console.error('handleSendMessage: error sending message:', error)
-      console.error('handleSendMessage: error details:', JSON.stringify(error, null, 2))
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      setNewMessage(messageText) // Восстанавливаем текст сообщения
-      
-      if (webApp) {
-        webApp.showAlert('Помилка при відправці повідомлення: ' + errorMessage)
-      } else {
-        alert('Помилка при відправці повідомлення: ' + errorMessage)
-      }
-    } finally {
-      setSending(false)
-    }
-  }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const formatTime = (timestamp?: string) => {
@@ -153,76 +82,65 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="chat-page">
-        <div className="chat-page__loading">Завантаження...</div>
-      </div>
-    )
-  }
-
-  if (!otherUser || !currentUser) {
-    return (
-      <div className="chat-page">
-        <div className="chat-page__empty">
-          <p>Користувач не знайдено</p>
-          <button className="chat-page__button" onClick={() => navigate(-1)}>
-            Назад
-          </button>
-        </div>
+      <div className="chats-page">
+        <div className="chats-page__loading">Завантаження...</div>
       </div>
     )
   }
 
   return (
-    <div className="chat-page">
-      <div className="chat-page__header">
-        <div className="chat-page__user-info">
-          <h2 className="chat-page__user-name">👤 {otherUser.name}</h2>
-          {otherUser.region && (
-            <p className="chat-page__user-region">📍 {otherUser.region}</p>
-          )}
+    <div className="chats-page">
+      <h2 className="chats-page__title">Чати</h2>
+
+      {chats.length === 0 ? (
+        <div className="chats-page__empty">
+          <p>У вас поки немає активних чатів</p>
+          <p className="chats-page__hint">Почніть розмову з іншими користувачами!</p>
         </div>
-      </div>
-
-      <div className="chat-page__messages" ref={messagesContainerRef}>
-        {messages.length === 0 ? (
-          <div className="chat-page__empty-messages">
-            <p>Повідомлень поки немає</p>
-            <p className="chat-page__hint">Почніть розмову!</p>
-          </div>
-        ) : (
-          messages.map((message) => {
-            const isOwn = message.from_user_id === currentUser.id
-            return (
-              <ChatBubble
-                key={message.id}
-                message={message.message_text}
-                isOwn={isOwn}
-                timestamp={formatTime(message.created_at)}
-              />
-            )
-          })
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form className="chat-page__input-form" onSubmit={handleSendMessage}>
-        <input
-          type="text"
-          className="chat-page__input"
-          placeholder="Написати повідомлення..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          disabled={sending}
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="chat-page__send-button"
-          disabled={!newMessage.trim() || sending}
-        >
-          {sending ? '...' : '➤'}
-        </button>
-      </form>
+      ) : (
+        <div className="chats-page__list">
+          {chats.map((chat) => (
+            <button
+              key={chat.user.id}
+              className="chats-page__chat-item"
+              onClick={() => navigate(`/chat/${chat.user.id}`)}
+            >
+              <div className="chats-page__chat-avatar">
+                👤
+              </div>
+              <div className="chats-page__chat-content">
+                <div className="chats-page__chat-header">
+                  <h3 className="chats-page__chat-name">{chat.user.name}</h3>
+                  {chat.lastMessage && (
+                    <span className="chats-page__chat-time">
+                      {formatTime(chat.lastMessage.created_at)}
+                    </span>
+                  )}
+                </div>
+                <div className="chats-page__chat-preview">
+                  {chat.lastMessage ? (
+                    <p className="chats-page__chat-message">
+                      {chat.lastMessage.message_text}
+                    </p>
+                  ) : (
+                    <p className="chats-page__chat-message chats-page__chat-message--empty">
+                      Немає повідомлень
+                    </p>
+                  )}
+                  {chat.unreadCount > 0 && (
+                    <span className="chats-page__unread-badge">
+                      {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                    </span>
+                  )}
+                </div>
+                {chat.user.region && (
+                  <p className="chats-page__chat-region">📍 {chat.user.region}</p>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
