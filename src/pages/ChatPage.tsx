@@ -18,7 +18,7 @@ interface Chat {
   unreadCount: number
 }
 
-export default function ChatsPage() {
+function ChatsPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
   const { currentUser, getChats } = useSupabase()
@@ -40,7 +40,6 @@ export default function ChatsPage() {
   useEffect(() => {
     if (currentUser) {
       loadChats()
-      // Обновляем список чатов каждые 5 секунд
       const interval = setInterval(() => {
         loadChats()
       }, 5000)
@@ -144,4 +143,6 @@ export default function ChatsPage() {
     </div>
   )
 }
+
+export default ChatsPage
 
