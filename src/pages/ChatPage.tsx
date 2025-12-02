@@ -4,6 +4,7 @@ import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
 import ChatBubble from '../components/ChatBubble'
 import { Message } from '../types'
+import { safeBackButtonShow, safeBackButtonHide } from '../utils/telegram'
 import './ChatPage.css'
 
 export default function ChatPage() {
@@ -20,14 +21,13 @@ export default function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (webApp?.BackButton) {
-      webApp.BackButton.show()
-      webApp.BackButton.onClick(() => navigate(-1))
+    if (webApp) {
+      safeBackButtonShow(webApp, () => navigate('/chats'))
     }
 
     return () => {
-      if (webApp?.BackButton) {
-        webApp.BackButton.hide()
+      if (webApp) {
+        safeBackButtonHide(webApp)
       }
     }
   }, [webApp, navigate])
@@ -172,6 +172,10 @@ export default function ChatPage() {
     )
   }
 
+  const handleCloseChat = () => {
+    navigate('/chats')
+  }
+
   return (
     <div className="chat-page">
       <div className="chat-page__header">
@@ -181,6 +185,13 @@ export default function ChatPage() {
             <p className="chat-page__user-region">📍 {otherUser.region}</p>
           )}
         </div>
+        <button
+          className="chat-page__close-button"
+          onClick={handleCloseChat}
+          aria-label="Закрити чат"
+        >
+          ✕
+        </button>
       </div>
 
       <div className="chat-page__messages" ref={messagesContainerRef}>
