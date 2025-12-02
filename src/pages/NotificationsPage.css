@@ -31,17 +31,63 @@
   }
 }
 
+.notifications-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
 .notifications-page__title {
   font-size: 24px;
   font-weight: 600;
-  margin-bottom: 20px;
+  margin: 0;
   color: var(--tg-theme-text-color);
+  flex: 1;
+  min-width: 0;
+}
+
+.notifications-page__delete-all-button {
+  background: var(--tg-theme-secondary-bg-color);
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.2));
+  color: var(--tg-theme-text-color);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s, background-color 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notifications-page__delete-all-button:active {
+  opacity: 0.7;
+  background-color: var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+}
+
+.notifications-page__delete-all-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 480px) {
+  .notifications-page__header {
+    margin-bottom: 16px;
+    gap: 8px;
+  }
+
   .notifications-page__title {
     font-size: 20px;
-    margin-bottom: 16px;
+  }
+
+  .notifications-page__delete-all-button {
+    font-size: 13px;
+    padding: 6px 12px;
   }
 }
 
