@@ -200,3 +200,34 @@
   transform: scale(0.98);
 }
 
+.index-page__card {
+  position: relative;
+}
+
+.index-page__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff3b30;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 480px) {
+  .index-page__badge {
+    top: 6px;
+    right: 6px;
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+  }
+}
+
