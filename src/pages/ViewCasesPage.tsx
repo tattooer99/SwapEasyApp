@@ -109,6 +109,18 @@ export default function ViewCasesPage() {
           <span className="view-cases-page__option-arrow">→</span>
         </button>
 
+        <button
+          className="view-cases-page__option"
+          onClick={() => navigate('/archive')}
+        >
+          <span className="view-cases-page__option-icon">📁</span>
+          <div className="view-cases-page__option-content">
+            <h3>Архів</h3>
+            <p>Кейси, які брали участь в обмінах</p>
+          </div>
+          <span className="view-cases-page__option-arrow">→</span>
+        </button>
+
         <div className="view-cases-page__interests-section">
           <h3 className="view-cases-page__interests-title">🎯 Інтереси</h3>
           <p className="view-cases-page__interests-description">
