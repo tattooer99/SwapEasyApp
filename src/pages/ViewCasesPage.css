@@ -127,3 +127,254 @@
   }
 }
 
+.view-cases-page__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: var(--tg-theme-hint-color);
+  font-size: 16px;
+  text-align: center;
+}
+
+.view-cases-page__interests-section {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--tg-theme-secondary-bg-color);
+  border-radius: 12px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__interests-section {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 10px;
+  }
+}
+
+.view-cases-page__interests-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__interests-title {
+    font-size: 18px;
+  }
+}
+
+.view-cases-page__interests-description {
+  font-size: 14px;
+  color: var(--tg-theme-hint-color);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__interests-description {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+}
+
+.view-cases-page__add-interest-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  touch-action: manipulation;
+  margin-bottom: 16px;
+}
+
+.view-cases-page__add-interest-button:active {
+  opacity: 0.8;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__add-interest-button {
+    padding: 10px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+}
+
+.view-cases-page__add-interest-form {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--tg-theme-bg-color);
+  border-radius: 8px;
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__add-interest-form {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+}
+
+.view-cases-page__add-interest-form h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 12px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__add-interest-form h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+}
+
+.view-cases-page__interest-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.view-cases-page__interest-options label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+}
+
+.view-cases-page__select {
+  padding: 10px;
+  background: var(--tg-theme-secondary-bg-color);
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+  border-radius: 8px;
+  color: var(--tg-theme-text-color);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.view-cases-page__interest-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.view-cases-page__interest-button {
+  flex: 1;
+  padding: 10px;
+  background: var(--tg-theme-button-color);
+  color: var(--tg-theme-button-text-color);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  touch-action: manipulation;
+}
+
+.view-cases-page__interest-button:active {
+  opacity: 0.8;
+}
+
+.view-cases-page__interest-button--cancel {
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+}
+
+.view-cases-page__empty-interests {
+  text-align: center;
+  color: var(--tg-theme-hint-color);
+  font-size: 14px;
+  padding: 20px;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__empty-interests {
+    font-size: 13px;
+    padding: 16px;
+  }
+}
+
+.view-cases-page__interests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.view-cases-page__interest-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--tg-theme-bg-color);
+  border-radius: 8px;
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.1));
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__interest-item {
+    padding: 12px;
+  }
+}
+
+.view-cases-page__interest-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.view-cases-page__interest-emoji {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__interest-emoji {
+    font-size: 28px;
+  }
+}
+
+.view-cases-page__interest-type {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--tg-theme-text-color);
+  margin-bottom: 4px;
+}
+
+.view-cases-page__interest-price {
+  font-size: 13px;
+  color: var(--tg-theme-hint-color);
+}
+
+.view-cases-page__delete-interest-button {
+  padding: 8px 16px;
+  background: var(--tg-theme-secondary-bg-color);
+  color: var(--tg-theme-text-color);
+  border: 1px solid var(--tg-theme-hint-color, rgba(0, 0, 0, 0.2));
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.view-cases-page__delete-interest-button:active {
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .view-cases-page__delete-interest-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
