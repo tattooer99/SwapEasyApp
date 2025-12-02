@@ -728,10 +728,11 @@ export function useSupabase() {
   async function getNotifications(): Promise<{
     mutualLikes: MutualLikeNotification[]
     exchangeOffers: ExchangeOffer[]
+    exchangeResponses: ExchangeOffer[]
   }> {
     if (!currentUser) {
       console.log('getNotifications: currentUser is null')
-      return { mutualLikes: [], exchangeOffers: [] }
+      return { mutualLikes: [], exchangeOffers: [], exchangeResponses: [] }
     }
 
     console.log('getNotifications: fetching for user_id:', currentUser.id)
@@ -747,7 +748,7 @@ export function useSupabase() {
       console.error('Error fetching mutual likes:', mutualLikesError)
     }
 
-    // Получаем предложения обмена без автоматических связей
+    // Получаем входящие предложения обмена (pending) - где текущий пользователь получатель
     const { data: exchangeOffersData, error: exchangeOffersError } = await supabase
       .from('exchange_offers')
       .select('*')
@@ -757,6 +758,19 @@ export function useSupabase() {
 
     if (exchangeOffersError) {
       console.error('Error fetching exchange offers:', exchangeOffersError)
+    }
+
+    // Получаем ответы на предложения обмена (accepted/declined) - где текущий пользователь отправитель
+    const { data: exchangeResponsesData, error: exchangeResponsesError } = await supabase
+      .from('exchange_offers')
+      .select('*')
+      .eq('from_user_id', currentUser.id)
+      .in('status', ['accepted', 'declined'])
+      .order('created_at', { ascending: false })
+      .limit(20) // Ограничиваем количество, чтобы не перегружать
+
+    if (exchangeResponsesError) {
+      console.error('Error fetching exchange responses:', exchangeResponsesError)
     }
 
     // Загружаем связанные данные вручную
@@ -810,14 +824,42 @@ export function useSupabase() {
       }
     }
 
+    // Загружаем ответы на предложения обмена
+    const exchangeResponses: ExchangeOffer[] = []
+    if (exchangeResponsesData) {
+      for (const offer of exchangeResponsesData) {
+        // Получаем пользователей
+        const [fromUserResult, toUserResult] = await Promise.all([
+          supabase.from('users').select('*').eq('id', offer.from_user_id).single(),
+          supabase.from('users').select('*').eq('id', offer.to_user_id).single(),
+        ])
+
+        // Получаем кейсы
+        const [offeredItemResult, requestedItemResult] = await Promise.all([
+          supabase.from('my_items').select('*').eq('id', offer.offered_item_id).single(),
+          supabase.from('my_items').select('*').eq('id', offer.requested_item_id).single(),
+        ])
+
+        exchangeResponses.push({
+          ...offer,
+          from_user: fromUserResult.data as User | undefined,
+          to_user: toUserResult.data as User | undefined,
+          offered_item: offeredItemResult.data as Case | undefined,
+          requested_item: requestedItemResult.data as Case | undefined,
+        } as ExchangeOffer)
+      }
+    }
+
     console.log('getNotifications: results:', {
       mutualLikes: mutualLikes.length,
       exchangeOffers: exchangeOffers.length,
+      exchangeResponses: exchangeResponses.length,
     })
 
     return {
       mutualLikes,
       exchangeOffers,
+      exchangeResponses,
     }
   }
 
@@ -1279,14 +1321,26 @@ export function useSupabase() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     if (!supabaseUrl || !currentUser) return 0
 
-    // Считаем непрочитанные предложения обмена
-    const { count } = await supabase
+    // Считаем входящие предложения обмена (pending)
+    const { count: pendingCount } = await supabase
       .from('exchange_offers')
       .select('*', { count: 'exact', head: true })
       .eq('to_user_id', currentUser.id)
       .eq('status', 'pending')
 
-    return count || 0
+    // Считаем ответы на предложения обмена (accepted/declined) - где текущий пользователь отправитель
+    // Ограничиваем только недавними (за последние 7 дней), чтобы не считать старые
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    
+    const { count: responsesCount } = await supabase
+      .from('exchange_offers')
+      .select('*', { count: 'exact', head: true })
+      .eq('from_user_id', currentUser.id)
+      .in('status', ['accepted', 'declined'])
+      .gte('created_at', sevenDaysAgo.toISOString())
+
+    return (pendingCount || 0) + (responsesCount || 0)
   }
 
   async function getUnreadMessagesCount(): Promise<number> {
