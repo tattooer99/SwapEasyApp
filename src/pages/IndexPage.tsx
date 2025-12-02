@@ -299,7 +299,7 @@ export default function IndexPage() {
           onClick={() => navigate('/favorites')}
         >
           <span className="index-page__card-icon">❤️</span>
-          <span className="index-page__card-text">Інтереси</span>
+          <span className="index-page__card-text">Вподобання</span>
         </button>
 
         <button
@@ -343,4 +343,5 @@ export default function IndexPage() {
     </div>
   )
 }
+
 
