@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
-import { safeBackButtonShow, safeBackButtonHide } from '../utils/telegram'
+import { safeBackButtonShow, safeBackButtonHide, safeShowAlert } from '../utils/telegram'
 import './ChatsPage.css'
 
 interface Chat {
@@ -21,9 +21,10 @@ interface Chat {
 export default function ChatsPage() {
   const navigate = useNavigate()
   const { webApp } = useTelegram()
-  const { currentUser, getChats } = useSupabase()
+  const { currentUser, getChats, deleteChat } = useSupabase()
   const [chats, setChats] = useState<Chat[]>([])
   const [loading, setLoading] = useState(true)
+  const [deletingChatId, setDeletingChatId] = useState<number | null>(null)
 
   useEffect(() => {
     if (webApp) {
@@ -79,6 +80,32 @@ export default function ChatsPage() {
     return date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' })
   }
 
+  const handleDeleteChat = async (e: React.MouseEvent, chatUserId: number) => {
+    e.stopPropagation() // Предотвращаем открытие чата при клике на кнопку удаления
+    
+    const confirmed = window.confirm('Ви впевнені, що хочете видалити цей чат? Всі повідомлення будуть видалені.')
+    if (!confirmed) return
+
+    try {
+      setDeletingChatId(chatUserId)
+      await deleteChat(chatUserId)
+      safeShowAlert(webApp, 'Чат видалено')
+      
+      // Обновляем список чатов
+      await loadChats()
+      
+      if (webApp?.HapticFeedback) {
+        webApp.HapticFeedback.notificationOccurred('success')
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      safeShowAlert(webApp, 'Помилка при видаленні чату: ' + errorMessage)
+    } finally {
+      setDeletingChatId(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="chats-page">
@@ -99,44 +126,56 @@ export default function ChatsPage() {
       ) : (
         <div className="chats-page__list">
           {chats.map((chat) => (
-            <button
+            <div
               key={chat.user.id}
-              className="chats-page__chat-item"
-              onClick={() => navigate(`/chat/${chat.user.id}`)}
+              className="chats-page__chat-item-wrapper"
             >
-              <div className="chats-page__chat-avatar">
-                👤
-              </div>
-              <div className="chats-page__chat-content">
-                <div className="chats-page__chat-header">
-                  <h3 className="chats-page__chat-name">{chat.user.name}</h3>
-                  {chat.lastMessage && (
-                    <span className="chats-page__chat-time">
-                      {formatTime(chat.lastMessage.created_at)}
-                    </span>
+              <button
+                className="chats-page__chat-item"
+                onClick={() => navigate(`/chat/${chat.user.id}`)}
+              >
+                <div className="chats-page__chat-avatar">
+                  👤
+                </div>
+                <div className="chats-page__chat-content">
+                  <div className="chats-page__chat-header">
+                    <h3 className="chats-page__chat-name">{chat.user.name}</h3>
+                    {chat.lastMessage && (
+                      <span className="chats-page__chat-time">
+                        {formatTime(chat.lastMessage.created_at)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="chats-page__chat-preview">
+                    {chat.lastMessage ? (
+                      <p className="chats-page__chat-message">
+                        {chat.lastMessage.message_text}
+                      </p>
+                    ) : (
+                      <p className="chats-page__chat-message chats-page__chat-message--empty">
+                        Немає повідомлень
+                      </p>
+                    )}
+                    {chat.unreadCount > 0 && (
+                      <span className="chats-page__unread-badge">
+                        {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  {chat.user.region && (
+                    <p className="chats-page__chat-region">📍 {chat.user.region}</p>
                   )}
                 </div>
-                <div className="chats-page__chat-preview">
-                  {chat.lastMessage ? (
-                    <p className="chats-page__chat-message">
-                      {chat.lastMessage.message_text}
-                    </p>
-                  ) : (
-                    <p className="chats-page__chat-message chats-page__chat-message--empty">
-                      Немає повідомлень
-                    </p>
-                  )}
-                  {chat.unreadCount > 0 && (
-                    <span className="chats-page__unread-badge">
-                      {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
-                    </span>
-                  )}
-                </div>
-                {chat.user.region && (
-                  <p className="chats-page__chat-region">📍 {chat.user.region}</p>
-                )}
-              </div>
-            </button>
+              </button>
+              <button
+                className="chats-page__delete-button"
+                onClick={(e) => handleDeleteChat(e, chat.user.id)}
+                disabled={deletingChatId === chat.user.id}
+                aria-label="Видалити чат"
+              >
+                {deletingChatId === chat.user.id ? '...' : '🗑️'}
+              </button>
+            </div>
           ))}
         </div>
       )}
