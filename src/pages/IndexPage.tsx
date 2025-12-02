@@ -7,8 +7,10 @@ import './IndexPage.css'
 export default function IndexPage() {
   const navigate = useNavigate()
   const { user, webApp } = useTelegram()
-  const { currentUser, loading, updateUserRegion } = useSupabase()
+  const { currentUser, loading, updateUserRegion, getUnreadNotificationsCount, getUnreadMessagesCount } = useSupabase()
   const [showRegionSelect, setShowRegionSelect] = useState(false)
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [unreadMessages, setUnreadMessages] = useState(0)
 
   useEffect(() => {
     if (!loading) {
@@ -29,6 +31,31 @@ export default function IndexPage() {
       }
     }
   }, [webApp, showRegionSelect])
+
+  useEffect(() => {
+    if (currentUser && !showRegionSelect) {
+      loadUnreadCounts()
+      // Обновляем счетчики каждые 10 секунд
+      const interval = setInterval(() => {
+        loadUnreadCounts()
+      }, 10000)
+
+      return () => clearInterval(interval)
+    }
+  }, [currentUser, showRegionSelect])
+
+  const loadUnreadCounts = async () => {
+    try {
+      const [notificationsCount, messagesCount] = await Promise.all([
+        getUnreadNotificationsCount(),
+        getUnreadMessagesCount(),
+      ])
+      setUnreadNotifications(notificationsCount)
+      setUnreadMessages(messagesCount)
+    } catch (error) {
+      console.error('Error loading unread counts:', error)
+    }
+  }
 
   const handleRegionSelect = async (region: string) => {
     try {
@@ -112,6 +139,20 @@ export default function IndexPage() {
           >
             <span className="index-page__card-icon">🔔</span>
             <span className="index-page__card-text">Сповіщення</span>
+            {unreadNotifications > 0 && (
+              <span className="index-page__badge">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
+            )}
+          </button>
+
+          <button
+            className="index-page__card"
+            onClick={() => navigate('/chats')}
+          >
+            <span className="index-page__card-icon">💬</span>
+            <span className="index-page__card-text">Чати</span>
+            {unreadMessages > 0 && (
+              <span className="index-page__badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+            )}
           </button>
 
           <button
@@ -179,6 +220,20 @@ export default function IndexPage() {
           >
             <span className="index-page__card-icon">🔔</span>
             <span className="index-page__card-text">Сповіщення</span>
+            {unreadNotifications > 0 && (
+              <span className="index-page__badge">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
+            )}
+          </button>
+
+          <button
+            className="index-page__card"
+            onClick={() => navigate('/chats')}
+          >
+            <span className="index-page__card-icon">💬</span>
+            <span className="index-page__card-text">Чати</span>
+            {unreadMessages > 0 && (
+              <span className="index-page__badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+            )}
           </button>
         </div>
       </div>
@@ -261,6 +316,20 @@ export default function IndexPage() {
         >
           <span className="index-page__card-icon">🔔</span>
           <span className="index-page__card-text">Сповіщення</span>
+          {unreadNotifications > 0 && (
+            <span className="index-page__badge">{unreadNotifications > 99 ? '99+' : unreadNotifications}</span>
+          )}
+        </button>
+
+        <button
+          className="index-page__card"
+          onClick={() => navigate('/chats')}
+        >
+          <span className="index-page__card-icon">💬</span>
+          <span className="index-page__card-text">Чати</span>
+          {unreadMessages > 0 && (
+            <span className="index-page__badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>
+          )}
         </button>
 
         <button
