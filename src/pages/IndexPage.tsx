@@ -7,10 +7,11 @@ import './IndexPage.css'
 export default function IndexPage() {
   const navigate = useNavigate()
   const { user, webApp } = useTelegram()
-  const { currentUser, loading, updateUserRegion, getUnreadNotificationsCount, getUnreadMessagesCount } = useSupabase()
+  const { currentUser, loading, updateUserRegion, getUnreadNotificationsCount, getUnreadMessagesCount, getUserRating } = useSupabase()
   const [showRegionSelect, setShowRegionSelect] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [userRating, setUserRating] = useState(0)
 
   useEffect(() => {
     if (!loading) {
@@ -35,9 +36,11 @@ export default function IndexPage() {
   useEffect(() => {
     if (currentUser && !showRegionSelect) {
       loadUnreadCounts()
+      loadUserRating()
       // Обновляем счетчики каждые 10 секунд
       const interval = setInterval(() => {
         loadUnreadCounts()
+        loadUserRating()
       }, 10000)
 
       return () => clearInterval(interval)
@@ -54,6 +57,16 @@ export default function IndexPage() {
       setUnreadMessages(messagesCount)
     } catch (error) {
       console.error('Error loading unread counts:', error)
+    }
+  }
+
+  const loadUserRating = async () => {
+    if (!currentUser) return
+    try {
+      const ratingData = await getUserRating(currentUser.id)
+      setUserRating(ratingData.rating)
+    } catch (error) {
+      console.error('Error loading user rating:', error)
     }
   }
 
@@ -95,6 +108,12 @@ export default function IndexPage() {
             Привіт, {currentUser.name}! 👋
           </h1>
           <h2 className="index-page__subtitle">SwapEasyApp</h2>
+          {currentUser && (
+            <div className="index-page__rating">
+              <span className="index-page__rating-star">⭐</span>
+              <span className="index-page__rating-value">{userRating}</span>
+            </div>
+          )}
           <p style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px', marginTop: '8px' }}>
             Режим розробки: Supabase не налаштовано або працюємо без Telegram
           </p>
@@ -176,6 +195,12 @@ export default function IndexPage() {
             Привіт, Тестовий користувач! 👋
           </h1>
           <h2 className="index-page__subtitle">SwapEasyApp</h2>
+          {currentUser && (
+            <div className="index-page__rating">
+              <span className="index-page__rating-star">⭐</span>
+              <span className="index-page__rating-value">{userRating}</span>
+            </div>
+          )}
           <p style={{ color: 'var(--tg-theme-hint-color)', fontSize: '14px', marginTop: '8px' }}>
             Режим розробки: Supabase не налаштовано або працюємо без Telegram
           </p>
@@ -275,6 +300,12 @@ export default function IndexPage() {
           Привіт, {user?.first_name || 'Користувач'}! 👋
         </h1>
         <h2 className="index-page__subtitle">SwapEasyApp</h2>
+        {currentUser && (
+          <div className="index-page__rating">
+            <span className="index-page__rating-star">⭐</span>
+            <span className="index-page__rating-value">{userRating}</span>
+          </div>
+        )}
       </div>
 
       <div className="index-page__cards">
@@ -343,5 +374,4 @@ export default function IndexPage() {
     </div>
   )
 }
-
 
