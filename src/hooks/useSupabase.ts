@@ -691,6 +691,39 @@ export function useSupabase() {
     await checkMutualLike(itemId, caseData)
   }
 
+  async function unlikeCase(itemId: number): Promise<void> {
+    if (!currentUser) throw new Error('User not initialized')
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+    if (!supabaseUrl) {
+      throw new Error('Supabase не настроен')
+    }
+
+    // Удаляем из liked_items
+    const { error: likedError } = await supabase
+      .from('liked_items')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('item_id', itemId)
+
+    if (likedError) {
+      console.error('Error removing from liked_items:', likedError)
+      throw likedError
+    }
+
+    // Удаляем из likes
+    const { error: likeError } = await supabase
+      .from('likes')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('item_id', itemId)
+
+    if (likeError) {
+      console.error('Error removing from likes:', likeError)
+      // Не бросаем ошибку, так как основная запись уже удалена
+    }
+  }
+
   async function checkMutualLike(itemId: number, caseData: Case): Promise<void> {
     if (!currentUser || !caseData.owner) return
 
@@ -1629,6 +1662,7 @@ export function useSupabase() {
     getLikedCases,
     searchCases,
     likeCase,
+    unlikeCase,
     createExchangeOffer,
     getNotifications,
     respondToExchangeOffer,
