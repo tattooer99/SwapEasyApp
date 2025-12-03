@@ -127,14 +127,29 @@ export default function FavoritesPage() {
                   }
                 }}
               />
-              <button
-                className="favorites-page__delete-case-button"
-                onClick={() => handleDelete(caseItem.id)}
-                disabled={deletingCaseId === caseItem.id}
-                aria-label="Видалити з вподобань"
-              >
-                {deletingCaseId === caseItem.id ? '...' : '🗑️ Видалити'}
-              </button>
+              <div className="favorites-page__case-actions">
+                {caseItem.owner?.id && (
+                  <button
+                    className="favorites-page__view-user-button"
+                    onClick={() => {
+                      if (caseItem.owner?.id) {
+                        navigate(`/user-cases/${caseItem.owner.id}`)
+                      }
+                    }}
+                    aria-label="Переглянути всі кейси користувача"
+                  >
+                    👤 Всі кейси користувача
+                  </button>
+                )}
+                <button
+                  className="favorites-page__delete-case-button"
+                  onClick={() => handleDelete(caseItem.id)}
+                  disabled={deletingCaseId === caseItem.id}
+                  aria-label="Видалити з вподобань"
+                >
+                  {deletingCaseId === caseItem.id ? '...' : '🗑️ Видалити'}
+                </button>
+              </div>
             </div>
           ))
         )}
