@@ -49,11 +49,55 @@
   font-size: 32px;
   font-weight: 700;
   color: var(--tg-theme-link-color);
+  margin-bottom: 12px;
 }
 
 @media (max-width: 480px) {
   .index-page__subtitle {
     font-size: 28px;
+    margin-bottom: 10px;
+  }
+}
+
+.index-page__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--tg-theme-secondary-bg-color);
+  border-radius: 20px;
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .index-page__rating {
+    gap: 5px;
+    padding: 5px 10px;
+    margin-top: 6px;
+  }
+}
+
+.index-page__rating-star {
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .index-page__rating-star {
+    font-size: 16px;
+  }
+}
+
+.index-page__rating-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color);
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .index-page__rating-value {
+    font-size: 14px;
   }
 }
 
