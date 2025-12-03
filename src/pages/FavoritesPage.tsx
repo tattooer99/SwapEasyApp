@@ -10,9 +10,10 @@ export default function FavoritesPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { webApp } = useTelegram()
-  const { getLikedCases, currentUser, loading: userLoading } = useSupabase()
+  const { getLikedCases, unlikeCase, currentUser, loading: userLoading } = useSupabase()
   const [likedCases, setLikedCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
+  const [deletingCaseId, setDeletingCaseId] = useState<number | null>(null)
   const loadingRef = useRef(false)
 
   useEffect(() => {
@@ -71,6 +72,32 @@ export default function FavoritesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, userLoading, currentUser?.id])
 
+  const handleDelete = async (caseId: number) => {
+    if (deletingCaseId !== null) return
+
+    try {
+      setDeletingCaseId(caseId)
+      await unlikeCase(caseId)
+      
+      // Обновляем список, удаляя удаленный кейс
+      setLikedCases(prev => prev.filter(c => c.id !== caseId))
+      
+      if (webApp?.HapticFeedback) {
+        webApp.HapticFeedback.notificationOccurred('success')
+      }
+      if (webApp) {
+        webApp.showAlert('Видалено з вподобань')
+      }
+    } catch (error) {
+      console.error('Error removing from favorites:', error)
+      if (webApp) {
+        webApp.showAlert('Помилка при видаленні з вподобань')
+      }
+    } finally {
+      setDeletingCaseId(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="favorites-page">
@@ -90,16 +117,25 @@ export default function FavoritesPage() {
           </div>
         ) : (
           likedCases.map((caseItem) => (
-            <CaseCard 
-              key={caseItem.id} 
-              case={caseItem} 
-              showActions={false}
-              onViewUser={() => {
-                if (caseItem.owner?.id) {
-                  navigate(`/user-cases/${caseItem.owner.id}`)
-                }
-              }}
-            />
+            <div key={caseItem.id} className="favorites-page__case-wrapper">
+              <CaseCard 
+                case={caseItem} 
+                showActions={false}
+                onViewUser={() => {
+                  if (caseItem.owner?.id) {
+                    navigate(`/user-cases/${caseItem.owner.id}`)
+                  }
+                }}
+              />
+              <button
+                className="favorites-page__delete-case-button"
+                onClick={() => handleDelete(caseItem.id)}
+                disabled={deletingCaseId === caseItem.id}
+                aria-label="Видалити з вподобань"
+              >
+                {deletingCaseId === caseItem.id ? '...' : '🗑️ Видалити'}
+              </button>
+            </div>
           ))
         )}
       </div>
