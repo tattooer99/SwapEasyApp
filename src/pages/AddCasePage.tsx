@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
@@ -18,47 +18,25 @@ export default function AddCasePage() {
     price_category: '',
     photos: [] as string[],
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSubmittingRef = useRef(false)
 
-  useEffect(() => {
-    if (webApp?.BackButton) {
-      webApp.BackButton.show()
-      webApp.BackButton.onClick(() => {
-        if (step === 'title') {
-          navigate('/')
-        } else {
-          setStep('title')
-        }
-      })
+  const handleSubmit = useCallback(async () => {
+    // Защита от повторных вызовов
+    if (isSubmittingRef.current) {
+      console.log('AddCasePage: handleSubmit already in progress, skipping')
+      return
     }
 
-    if (webApp?.MainButton) {
-      if (step === 'photos') {
-        // На шаге фото показываем MainButton как альтернативу кнопке "Готово"
-        webApp.MainButton.setText('Опублікувати')
-        webApp.MainButton.show()
-        webApp.MainButton.onClick(handleSubmit)
-      } else {
-        webApp.MainButton.hide()
-      }
-    }
-
-    return () => {
-      if (webApp?.BackButton) {
-        webApp.BackButton.hide()
-      }
-      if (webApp?.MainButton) {
-        webApp.MainButton.hide()
-      }
-    }
-  }, [webApp, step, navigate])
-
-  const handleSubmit = async () => {
     if (!formData.title || !formData.item_type || !formData.description || !formData.price_category) {
       if (webApp) {
         webApp.showAlert('Будь ласка, заповніть всі поля')
       }
       return
     }
+
+    isSubmittingRef.current = true
+    setIsSubmitting(true)
 
     try {
       if (webApp?.MainButton) {
@@ -107,11 +85,56 @@ export default function AddCasePage() {
         webApp.showAlert('Помилка при додаванні кейсу')
       }
     } finally {
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
       if (webApp?.MainButton) {
         webApp.MainButton.hideProgress()
       }
     }
-  }
+  }, [formData, createCase, webApp, navigate])
+
+  useEffect(() => {
+    if (!webApp) return
+
+    const backButtonHandler = () => {
+      if (step === 'title') {
+        navigate('/')
+      } else {
+        setStep('title')
+      }
+    }
+
+    if (webApp.BackButton) {
+      webApp.BackButton.show()
+      webApp.BackButton.onClick(backButtonHandler)
+    }
+
+    if (webApp.MainButton) {
+      if (step === 'photos') {
+        // На шаге фото показываем MainButton как альтернативу кнопке "Готово"
+        webApp.MainButton.setText('Опублікувати')
+        webApp.MainButton.show()
+        webApp.MainButton.onClick(handleSubmit)
+      } else {
+        webApp.MainButton.hide()
+      }
+    }
+
+    return () => {
+      if (webApp?.BackButton) {
+        webApp.BackButton.hide()
+        webApp.BackButton.offClick(backButtonHandler)
+      }
+      if (webApp?.MainButton) {
+        webApp.MainButton.hide()
+        // Очищаем обработчик только если он был установлен
+        if (step === 'photos') {
+          webApp.MainButton.offClick(handleSubmit)
+        }
+      }
+    }
+  }, [webApp, step, navigate, handleSubmit])
+
 
   const handleNext = () => {
     if (step === 'title' && formData.title) {
@@ -339,8 +362,9 @@ export default function AddCasePage() {
             <button 
               className="add-case-page__button" 
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Готово
+              {isSubmitting ? 'Збереження...' : 'Готово'}
             </button>
             <button 
               className="add-case-page__button add-case-page__button--cancel" 
