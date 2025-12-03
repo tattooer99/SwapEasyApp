@@ -380,46 +380,82 @@ export function useSupabase() {
       return []
     }
 
-    if (!currentUser) return []
-
-    // Получаем liked_items
-    const { data: likedItems, error } = await supabase
-      .from('liked_items')
-      .select('*')
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching liked cases:', error)
+    if (!currentUser) {
+      console.log('getLikedCases: currentUser is null')
       return []
     }
 
-    if (!likedItems || likedItems.length === 0) return []
+    console.log('getLikedCases: fetching liked items for user_id:', currentUser.id)
 
-    // Получаем уникальные telegram_id владельцев
-    const ownerTelegramIds = [...new Set(likedItems.map((item: any) => item.owner_telegram_id))]
+    // Получаем liked_items (только item_id)
+    const { data: likedItems, error: likedError } = await supabase
+      .from('liked_items')
+      .select('item_id')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false })
+
+    if (likedError) {
+      console.error('Error fetching liked items:', likedError)
+      return []
+    }
+
+    console.log('getLikedCases: found liked_items:', likedItems?.length || 0)
+
+    if (!likedItems || likedItems.length === 0) {
+      console.log('getLikedCases: no liked items found')
+      return []
+    }
+
+    // Получаем уникальные item_id
+    const itemIds = [...new Set(likedItems.map((item: any) => item.item_id))]
+    console.log('getLikedCases: item_ids to fetch:', itemIds)
+
+    // Получаем актуальные данные кейсов из my_items
+    // Используем or() для обработки случаев, когда is_archived может быть NULL
+    const { data: cases, error: casesError } = await supabase
+      .from('my_items')
+      .select('*')
+      .in('id', itemIds)
+      .or('is_archived.eq.false,is_archived.is.null')
+      .order('created_at', { ascending: false })
+
+    if (casesError) {
+      console.error('Error fetching liked cases:', casesError)
+      return []
+    }
+
+    console.log('getLikedCases: found cases:', cases?.length || 0)
+
+    if (!cases || cases.length === 0) {
+      console.log('getLikedCases: no cases found in my_items')
+      return []
+    }
 
     // Получаем информацию о владельцах
+    const userIds = [...new Set(cases.map((item: any) => item.user_id))]
     const { data: owners } = await supabase
       .from('users')
       .select('id, telegram_id, name, username, region')
-      .in('telegram_id', ownerTelegramIds)
+      .in('id', userIds)
 
     // Создаем мапу для быстрого поиска владельца
-    const ownersMap = new Map((owners || []).map((owner: any) => [owner.telegram_id, owner]))
+    const ownersMap = new Map((owners || []).map((owner: any) => [owner.id, owner]))
 
     // Объединяем данные
-    return likedItems.map((item: any) => {
-      const owner = ownersMap.get(item.owner_telegram_id)
+    const result = cases.map((item: any) => {
+      const owner = ownersMap.get(item.user_id)
       return {
         ...item,
         owner: owner || {
-          id: 0,
-          telegram_id: item.owner_telegram_id,
-          name: item.owner_name || 'Невідомо',
+          id: item.user_id,
+          telegram_id: '',
+          name: 'Невідомо',
         },
       }
     }) as Case[]
+
+    console.log('getLikedCases: returning', result.length, 'cases')
+    return result
   }
 
   async function searchCases(): Promise<Case[]> {
