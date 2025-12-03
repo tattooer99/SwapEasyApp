@@ -10,7 +10,7 @@ export default function FavoritesPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { webApp } = useTelegram()
-  const { getLikedCases } = useSupabase()
+  const { getLikedCases, currentUser, loading: userLoading } = useSupabase()
   const [likedCases, setLikedCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -28,23 +28,38 @@ export default function FavoritesPage() {
   }, [webApp, navigate])
 
   useEffect(() => {
-    loadData()
-  }, [location.pathname])
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const data = await getLikedCases()
-      setLikedCases(data)
-    } catch (error) {
-      console.error('Error loading data:', error)
-      if (webApp) {
-        webApp.showAlert('Помилка при завантаженні даних')
-      }
-    } finally {
-      setLoading(false)
+    // Ждем загрузки пользователя перед загрузкой данных
+    if (userLoading) {
+      return // Пока загружается пользователь, ничего не делаем
     }
-  }
+
+    if (!currentUser) {
+      // Если пользователь не загружен и загрузка завершена, значит пользователь не найден
+      setLoading(false)
+      setLikedCases([])
+      return
+    }
+
+    // Загружаем данные
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        console.log('FavoritesPage: loading liked cases for user:', currentUser.id)
+        const data = await getLikedCases()
+        console.log('FavoritesPage: received liked cases:', data.length)
+        setLikedCases(data)
+      } catch (error) {
+        console.error('Error loading data:', error)
+        if (webApp) {
+          webApp.showAlert('Помилка при завантаженні даних')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [location.pathname, userLoading, currentUser, getLikedCases, webApp])
 
   if (loading) {
     return (
