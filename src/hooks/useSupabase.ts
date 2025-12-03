@@ -381,11 +381,8 @@ export function useSupabase() {
     }
 
     if (!currentUser) {
-      console.log('getLikedCases: currentUser is null')
       return []
     }
-
-    console.log('getLikedCases: fetching liked items for user_id:', currentUser.id)
 
     // Получаем liked_items (только item_id)
     const { data: likedItems, error: likedError } = await supabase
@@ -399,16 +396,12 @@ export function useSupabase() {
       return []
     }
 
-    console.log('getLikedCases: found liked_items:', likedItems?.length || 0)
-
     if (!likedItems || likedItems.length === 0) {
-      console.log('getLikedCases: no liked items found')
       return []
     }
 
     // Получаем уникальные item_id
     const itemIds = [...new Set(likedItems.map((item: any) => item.item_id))]
-    console.log('getLikedCases: item_ids to fetch:', itemIds)
 
     // Получаем актуальные данные кейсов из my_items
     // Используем or() для обработки случаев, когда is_archived может быть NULL
@@ -424,10 +417,7 @@ export function useSupabase() {
       return []
     }
 
-    console.log('getLikedCases: found cases:', cases?.length || 0)
-
     if (!cases || cases.length === 0) {
-      console.log('getLikedCases: no cases found in my_items')
       return []
     }
 
@@ -442,7 +432,7 @@ export function useSupabase() {
     const ownersMap = new Map((owners || []).map((owner: any) => [owner.id, owner]))
 
     // Объединяем данные
-    const result = cases.map((item: any) => {
+    return cases.map((item: any) => {
       const owner = ownersMap.get(item.user_id)
       return {
         ...item,
@@ -453,9 +443,6 @@ export function useSupabase() {
         },
       }
     }) as Case[]
-
-    console.log('getLikedCases: returning', result.length, 'cases')
-    return result
   }
 
   async function searchCases(): Promise<Case[]> {
