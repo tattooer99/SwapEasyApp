@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
@@ -13,6 +13,7 @@ export default function FavoritesPage() {
   const { getLikedCases, currentUser, loading: userLoading } = useSupabase()
   const [likedCases, setLikedCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
+  const loadingRef = useRef(false)
 
   useEffect(() => {
     if (webApp?.BackButton) {
@@ -40,13 +41,19 @@ export default function FavoritesPage() {
       return
     }
 
+    // Предотвращаем множественные одновременные запросы
+    if (loadingRef.current) {
+      return
+    }
+
     // Загружаем данные
     const loadData = async () => {
+      if (loadingRef.current) return
+      loadingRef.current = true
+
       try {
         setLoading(true)
-        console.log('FavoritesPage: loading liked cases for user:', currentUser.id)
         const data = await getLikedCases()
-        console.log('FavoritesPage: received liked cases:', data.length)
         setLikedCases(data)
       } catch (error) {
         console.error('Error loading data:', error)
@@ -55,11 +62,14 @@ export default function FavoritesPage() {
         }
       } finally {
         setLoading(false)
+        loadingRef.current = false
       }
     }
 
     loadData()
-  }, [location.pathname, userLoading, currentUser, getLikedCases, webApp])
+    // Убираем getLikedCases и webApp из зависимостей, чтобы избежать бесконечного цикла
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, userLoading, currentUser?.id])
 
   if (loading) {
     return (
