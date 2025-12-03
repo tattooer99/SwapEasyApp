@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTelegram } from '../hooks/useTelegram'
 import { useSupabase } from '../hooks/useSupabase'
 import CaseCard from '../components/CaseCard'
@@ -8,6 +8,7 @@ import './FavoritesPage.css'
 
 export default function FavoritesPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { webApp } = useTelegram()
   const { getLikedCases } = useSupabase()
   const [likedCases, setLikedCases] = useState<Case[]>([])
@@ -28,7 +29,7 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, [location.pathname])
 
   const loadData = async () => {
     try {
